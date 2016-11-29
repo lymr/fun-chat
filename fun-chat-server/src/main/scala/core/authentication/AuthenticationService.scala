@@ -1,21 +1,20 @@
 package core.authentication
 
 import akka.Done
+import core.authentication.AuthenticationService._
 import core.db.users.UsersDao
-import core.entities.User.AuthToken
-import AuthenticationService._
+import core.entities.Defines._
 import core.entities.User
 
 import scala.concurrent.Future
 
-class AuthenticationService(val dao: UsersDao, val authManager: AuthenticationManager) {
+class AuthenticationService(val dao: UsersDao, val authManager: UserAuthenticator) {
 
-  def signIn(login: String, password: String): Future[AuthToken] = {
-    val error: Exception = new Exception(SIGN_IN_FAILURE_MESSAGE.format(login))
+  def signIn(login: String, password: UserSecret): Future[AuthToken] = {
     dao.findUserByName(login) match {
-      case None => Future.failed(error)
-      case Some(u: User) => authManager.authenticate(u, password)
-        .fold[Future[AuthToken]](Future.failed(error))(Future.successful(_))
+      case Some(User(Some(id: UserID), _, _)) => authManager.authenticate(id, password)
+          .fold[Future[AuthToken]](Future.failed(withError(SIGN_IN_FAILURE, login)))(Future.successful(_))
+      case _ => Future.failed(withError(SIGN_IN_FAILURE, login))
     }
   }
 
@@ -24,18 +23,23 @@ class AuthenticationService(val dao: UsersDao, val authManager: AuthenticationMa
     Future.successful(Done)
   }
 
-  def signUp(login: String, password: String): Future[AuthToken] = {
-    val error: Exception = new Exception(SIGN_UP_FAILURE_MESSAGE.format(login))
+  def signUp(login: String, password: UserSecret): Future[AuthToken] = {
     dao.findUserByName(login) match {
-      case Some(_) => Future.failed(error)
+      case Some(_) => Future.failed(withError(SIGN_UP_FAILURE, login))
       case None =>
-        val user = dao.createUser(login, password)
-        authManager.authenticate(user, password).fold[Future[AuthToken]](Future.failed(error))(Future.successful(_))
+        dao.createUser(login, password).userId match {
+        case Some(id) => authManager.authenticate(id, password)
+            .fold[Future[AuthToken]](Future.failed(withError(SIGN_UP_FAILURE, login)))(Future.successful(_))
+        case None => Future.failed(withError(SIGN_UP_FAILURE, login))
+      }
     }
   }
+
+  def withError(msg: String, args: String*): Exception =
+    new Exception(msg.format(args))
 }
 
 object AuthenticationService {
-  val SIGN_IN_FAILURE_MESSAGE: String = s"User '%s' failed to sign-in."
-  val SIGN_UP_FAILURE_MESSAGE: String = s"User '%s' failed to sign-up."
+  val SIGN_IN_FAILURE: String = s"User '%s' failed to sign-in."
+  val SIGN_UP_FAILURE: String = s"User '%s' failed to sign-up."
 }

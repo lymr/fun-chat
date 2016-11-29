@@ -6,7 +6,12 @@ import scalikejdbc.ParameterBinderFactory
 
 trait PostgreSQLExtensions {
 
-  implicit val intParameterBinderFactory: ParameterBinderFactory[UUID] =
+  implicit val uuidParameterBinderFactory: ParameterBinderFactory[UUID] =
+    ParameterBinderFactory { value => (stmt, idx) =>
+      stmt.setString(idx, value.toString)
+    }
+
+  implicit val charArrayParameterBinderFactory: ParameterBinderFactory[Array[Char]] =
     ParameterBinderFactory { value => (stmt, idx) =>
       stmt.setString(idx, value.toString)
     }
