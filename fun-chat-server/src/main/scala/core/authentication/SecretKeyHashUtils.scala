@@ -12,19 +12,19 @@ object SecretKeyHashUtils extends StrictLogging {
 
   val HASH_ALGORITHM: String = "PBKDF2WithHmacSHA512"
   val ITERATIONS: Int        = 20
-  val SECRET_KEY_LENGTH: Int = 64
+  val SECRET_KEY_LENGTH: Int = 512
 
   def validate(storedCredentials: CredentialSet, password: String): Boolean = {
-    val given = calculateHash(password.toCharArray, storedCredentials.salt.map(_.toByte))
+    val given = calculateHash(password.toCharArray, storedCredentials.salt)
     given match {
       case Some(givenPassword) => storedCredentials.password.sameElements(givenPassword)
-      case None              => false
+      case None                => false
     }
   }
 
-  def generate(password: Array[Char], salt: Array[Char]): Option[CredentialSet] = {
-    val result = calculateHash(password, salt.map(_.toByte))
-    result.map(s => CredentialSet(s.map(_.toChar), salt, HASH_ALGORITHM.toCharArray))
+  def generate(password: Array[Char], salt: Array[Byte]): Option[CredentialSet] = {
+    val result = calculateHash(password, salt)
+    result.map(pw => CredentialSet(pw, salt, HASH_ALGORITHM))
   }
 
   private def calculateHash(password: Array[Char],

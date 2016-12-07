@@ -13,13 +13,13 @@ class AuthenticationService(val dao: UsersDao, val authManager: UserAuthenticato
   def signIn(login: String, password: UserSecret): Future[AuthToken] = {
     dao.findUserByName(login) match {
       case Some(User(Some(id: UserID), _, _)) => authManager.authenticate(id, password)
-          .fold[Future[AuthToken]](Future.failed(withError(SIGN_IN_FAILURE, login)))(Future.successful(_))
+          .fold[Future[AuthToken]](Future.failed(withError(SIGN_IN_FAILURE, login)))(Future.successful)
       case _ => Future.failed(withError(SIGN_IN_FAILURE, login))
     }
   }
 
-  def signOut(login: String): Future[Done] = {
-    dao.findUserByName(login).foreach(authManager.revoke(_))
+  def signOut(login: String, token: AuthToken): Future[Done] = {
+    dao.findUserByName(login).foreach(authManager.revoke(_,token))
     Future.successful(Done)
   }
 
@@ -29,13 +29,13 @@ class AuthenticationService(val dao: UsersDao, val authManager: UserAuthenticato
       case None =>
         dao.createUser(login, password).userId match {
         case Some(id) => authManager.authenticate(id, password)
-            .fold[Future[AuthToken]](Future.failed(withError(SIGN_UP_FAILURE, login)))(Future.successful(_))
+            .fold[Future[AuthToken]](Future.failed(withError(SIGN_UP_FAILURE, login)))(Future.successful)
         case None => Future.failed(withError(SIGN_UP_FAILURE, login))
       }
     }
   }
 
-  def withError(msg: String, args: String*): Exception =
+  private def withError(msg: String, args: String*): Exception =
     new Exception(msg.format(args))
 }
 

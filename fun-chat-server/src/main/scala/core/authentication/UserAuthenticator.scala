@@ -5,7 +5,7 @@ import core.entities.Defines._
 import core.entities.{CredentialSet, User}
 
 class UserAuthenticator(secretValidator: (CredentialSet, String) => Boolean,
-                        tokenGenerator: () => String,
+                        tokenGenerator: () => AuthToken,
                         credentialsDao: UserCredentialsDao) {
 
   private var tokenStore: Map[UserID, AuthToken] = Map.empty
@@ -17,8 +17,8 @@ class UserAuthenticator(secretValidator: (CredentialSet, String) => Boolean,
     }
   }
 
-  def revoke(user: User): Unit = {
-    user.userId.filter(tokenStore.contains).foreach(remove)
+  def revoke(user: User, token: AuthToken): Unit = {
+    user.userId.filter(tokenStore.contains).foreach(id => if (validateToken(id, token)) remove(id))
   }
 
   def validateToken(userID: UserID, token: AuthToken): Boolean = {

@@ -5,4 +5,4 @@ package core.entities
   * @param salt Salt key
   * @param algorithm Hash algorithm
   */
-case class CredentialSet(password: Array[Char], salt: Array[Char], algorithm: Array[Char])
+case class CredentialSet(password: Array[Byte], salt: Array[Byte], algorithm: String)

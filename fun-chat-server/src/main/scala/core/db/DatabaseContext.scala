@@ -1,6 +1,7 @@
 package core.db
 
-import core.authentication.{SecretKeyHashUtils, SecuredTokenGenerator}
+import core.authentication.SecretKeyHashUtils
+import core.authentication.tokenGenerators.SecuredTokenGenerator
 import core.db.users._
 import scalikejdbc.config.DBsWithEnv
 

@@ -4,9 +4,13 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import core.entities.User
 import core.entities.Defines._
 import org.joda.time.DateTime
+import restapi.http.routes.entities._
 import spray.json._
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
+
+  implicit val authEntityFormat: RootJsonFormat[AuthEntity]               = jsonFormat2(AuthEntity)
+  implicit val credentialsEntityFormat: RootJsonFormat[CredentialsEntity] = jsonFormat2(CredentialsEntity)
 
   implicit object UserJsonFormat extends JsonFormat[User] {
     override def read(json: JsValue): User = json match {
