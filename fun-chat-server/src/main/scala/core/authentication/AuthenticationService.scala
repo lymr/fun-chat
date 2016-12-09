@@ -7,7 +7,7 @@ import core.entities.User
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthenticationService(private val authManager: UserAuthenticator, val dao: UsersDao)(
+class AuthenticationService(authManager: UserAuthenticator, val dao: UsersDao)(
     implicit ec: ExecutionContext) {
 
   def signIn(login: String, password: UserSecret): Future[Option[AuthToken]] = Future {
