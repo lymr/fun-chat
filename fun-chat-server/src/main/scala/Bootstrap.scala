@@ -23,7 +23,7 @@ class Bootstrap {
 
     val userAuthenticator =
       new UserAuthenticator(SecretKeyHashUtils.validate, AuthTokenGenerator.generate, dbc.credentialsDao)
-    val authService = new AuthenticationService(dbc.usersDao, userAuthenticator)
+    val authService = new AuthenticationService(userAuthenticator, dbc.usersDao)
     val httpRouter  = new HttpRouter(dbc, authService)
     val httpService = new HttpService(httpRouter, config)
     httpService.start()

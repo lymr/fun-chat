@@ -1,8 +1,8 @@
 object Main extends App {
 
   try {
-    val myBackupBootstrapper = new Bootstrap()
-    myBackupBootstrapper.startup()
+    val funChatBootstrapping = new Bootstrap()
+    funChatBootstrapping.startup()
   } catch {
     case ex: Exception =>
       println(s"Unexpected error occurred, Message ${ex.getMessage}.")

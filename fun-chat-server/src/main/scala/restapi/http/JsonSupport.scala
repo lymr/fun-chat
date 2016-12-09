@@ -9,10 +9,7 @@ import spray.json._
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
-  implicit val authEntityFormat: RootJsonFormat[AuthEntity]               = jsonFormat2(AuthEntity)
-  implicit val credentialsEntityFormat: RootJsonFormat[CredentialsEntity] = jsonFormat2(CredentialsEntity)
-
-  implicit object UserJsonFormat extends JsonFormat[User] {
+  implicit object UserJsonFormat extends RootJsonFormat[User] {
     override def read(json: JsValue): User = json match {
       case jsObject: JsObject =>
         jsObject.getFields("userId", "name", "lastSeen") match {
@@ -24,6 +21,22 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
     override def write(obj: User): JsValue = JsObject(
       "userId"   -> obj.userId.toJson,
+      "name"     -> JsString(obj.name),
+      "lastSeen" -> JsNumber(obj.lastSeen.getMillis)
+    )
+  }
+
+  implicit object UserInformationEntityJsonFormat extends RootJsonFormat[UserInformationEntity] {
+    override def read(json: JsValue): UserInformationEntity = json match {
+      case jsObject: JsObject =>
+        jsObject.getFields("name", "lastSeen") match {
+          case Seq(JsString(name), JsNumber(lastSeen)) =>
+            UserInformationEntity(name, new DateTime(lastSeen))
+        }
+      case _ => deserializationError("An error occurred while serializing User entity.")
+    }
+
+    override def write(obj: UserInformationEntity): JsValue = JsObject(
       "name"     -> JsString(obj.name),
       "lastSeen" -> JsNumber(obj.lastSeen.getMillis)
     )

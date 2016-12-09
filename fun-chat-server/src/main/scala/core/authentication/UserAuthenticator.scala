@@ -22,7 +22,7 @@ class UserAuthenticator(secretValidator: (CredentialSet, String) => Boolean,
   }
 
   def validateToken(userID: UserID, token: AuthToken): Boolean = {
-    tokenStore.get(userID).fold(ifEmpty = false)(_ == token)
+    tokenStore.get(userID).fold(ifEmpty = false)(_.equals(token))
   }
 
   private def createToken(id: UserID): AuthToken = {
