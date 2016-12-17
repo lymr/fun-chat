@@ -8,11 +8,14 @@ import core.entities.CredentialSet
 
 import scala.util.{Failure, Success, Try}
 
+/**
+  * Generates a Hash array of bytes representing an encrypted sequence of Salt and Secret keys.
+  */
 object SecretKeyHashUtils extends StrictLogging {
 
-  val HASH_ALGORITHM: String = "PBKDF2WithHmacSHA512"
-  val ITERATIONS: Int        = 20
-  val SECRET_KEY_LENGTH: Int = 512
+  private val HASH_ALGORITHM: String = "PBKDF2WithHmacSHA512"
+  private val ITERATIONS: Int        = 20
+  private val SECRET_KEY_LENGTH: Int = 512
 
   def validate(storedCredentials: CredentialSet, password: String): Boolean = {
     val given = calculateHash(password.toCharArray, storedCredentials.salt)

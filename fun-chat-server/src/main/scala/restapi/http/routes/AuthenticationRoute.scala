@@ -9,7 +9,7 @@ import restapi.http.JsonSupport
 import scala.concurrent.ExecutionContext
 
 class AuthenticationRoute(authService: AuthenticationService)(implicit ec: ExecutionContext)
-    extends Directives with ContentExtractionSupport with JsonSupport {
+    extends Directives with JsonSupport {
 
   val route: Route = pathPrefix("auth") {
     path("signIn") {
@@ -30,17 +30,6 @@ class AuthenticationRoute(authService: AuthenticationService)(implicit ec: Execu
               case Some(BasicHttpCredentials(username, password)) =>
                 complete(authService.signUp(username, password))
               case _ => complete(StatusCodes.Unauthorized)
-            }
-          }
-        }
-      } ~
-      path("signOut") {
-        pathEndOrSingleSlash {
-          post {
-            extractUserInfo { (id, token) =>
-              authorize(authService.authorize(id, token)) {
-                complete(authService.signOut(id, token))
-              }
             }
           }
         }

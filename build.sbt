@@ -11,7 +11,9 @@ lazy val `fun-chat-server` = (project in file("fun-chat-server"))
     libraryDependencies ++= Seq(
       "joda-time"                  % "joda-time"             % "2.9.6",
       "com.typesafe.akka"          %% "akka-http"            % "10.0.0",
+      "com.typesafe.akka"          %% "akka-http-core"       % "10.0.0",
       "com.typesafe.akka"          %% "akka-http-spray-json" % "10.0.0",
+      "com.auth0"                  % "java-jwt"              % "3.0.2",
       "com.typesafe.scala-logging" %% "scala-logging"        % "3.5.0",
       "org.postgresql"             % "postgresql"            % "9.4-1206-jdbc42",
       "org.scalikejdbc"            %% "scalikejdbc"          % "2.5.0",

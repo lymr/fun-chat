@@ -1,4 +1,4 @@
-package restapi.http.routes.entities
+package restapi.http.entities
 
 import core.entities.User
 import org.joda.time.DateTime

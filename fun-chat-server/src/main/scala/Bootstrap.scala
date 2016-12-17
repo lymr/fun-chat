@@ -21,8 +21,8 @@ class Bootstrap {
     val flywayService = new FlywayService(config)
     flywayService.migrateDatabaseSchema()
 
-    val userAuthenticator =
-      new UserAuthenticator(SecretKeyHashUtils.validate, AuthTokenGenerator.generate, dbc.credentialsDao)
+    val bearerTokenGenerator = new JwtBearerTokenGenerator(SecuredTokenGenerator.generate, config.tokenExpiration)
+    val userAuthenticator = new UserAuthenticator(SecretKeyHashUtils.validate, bearerTokenGenerator, dbc.credentialsDao)
     val authService = new AuthenticationService(userAuthenticator, dbc.usersDao)
     val httpRouter  = new HttpRouter(dbc, authService)
     val httpService = new HttpService(httpRouter, config)

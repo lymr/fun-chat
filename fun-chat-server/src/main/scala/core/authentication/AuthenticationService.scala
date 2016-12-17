@@ -1,39 +1,31 @@
 package core.authentication
 
-import akka.Done
 import core.db.users.UsersDao
 import core.entities.Defines._
 import core.entities.User
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthenticationService(authManager: UserAuthenticator, val dao: UsersDao)(
-    implicit ec: ExecutionContext) {
+class AuthenticationService(authenticator: UserAuthenticator, val dao: UsersDao)(implicit ec: ExecutionContext) {
 
-  def signIn(login: String, password: UserSecret): Future[Option[AuthToken]] = Future {
-    dao.findUserByName(login) match {
-      case Some(User(Some(id: UserID), _, _)) => authManager.authenticate(id, password)
-      case _                                  => None
+  def signIn(username: String, password: UserSecret): Future[Option[AuthToken]] = Future {
+    dao.findUserByName(username).flatMap(user => authenticator.authenticate(user, password))
+  }
+
+  def signUp(username: String, password: UserSecret): Future[Option[AuthToken]] = Future {
+    val createUser: (String, String) => Option[AuthToken] =
+      (l, p) => {
+        val user = dao.createUser(l, p)
+        authenticator.authenticate(user, password)
+      }
+
+    dao.findUserByName(username) match {
+      case Some(_) => None
+      case None => createUser(username, password)
     }
   }
 
-  def signOut(login: String, token: AuthToken): Future[Done] = Future {
-    dao.findUserByName(login).foreach(authManager.revoke(_, token))
-    Done
-  }
-
-  def signUp(login: String, password: UserSecret): Future[Option[AuthToken]] = Future {
-    val createUser: (String, String) => Option[AuthToken] =
-      (l, p) => dao.createUser(l, p).userId match {
-        case Some(id) => authManager.authenticate(id, password)
-        case None     => None
-      }
-
-    dao.findUserByName(login).fold(createUser(login, password))(_ => None)
-  }
-
-  def authorize(userId: UserID, token: AuthToken): Boolean = {
-    authManager.validateToken(userId, token)
+  def authorize(token: AuthToken): Future[Option[User]] = Future {
+    authenticator.validateToken(token)
   }
 }
-

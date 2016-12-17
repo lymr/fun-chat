@@ -1,10 +1,10 @@
 package restapi.http
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import core.entities.User
 import core.entities.Defines._
+import core.entities.User
 import org.joda.time.DateTime
-import restapi.http.routes.entities._
+import restapi.http.entities._
 import spray.json._
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {

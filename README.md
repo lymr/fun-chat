@@ -3,10 +3,11 @@
 
 Fun-Chat is a showcase project for an online chat (Instant Messaging). It implements some concepts taken from
 well known IM protocols, however its main goal is to demonstrate a client -> server -> client architecture utilizing
-Scala, Akka, Akka-Http and PostgreSQL with ScalikeJDBC.
+Scala, Akka, Akka-HTTP and PostgreSQL with ScalikeJDBC.
 
 # Technical Features
-* REST api with Akka-Http
+* REST API with Akka-HTTP.
+* Secure resources access using OAuth2 Bearer token with underlying Auth0 implementation of Json Web Token (JWT).
 * Non-blocking I/O with Akka actors
 * Storing users credentials at local DB with proper hashing using salt.
 * Persistence with PostgreSQL and ScalikeJDBC.

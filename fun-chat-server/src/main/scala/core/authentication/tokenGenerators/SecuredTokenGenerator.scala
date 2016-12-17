@@ -2,7 +2,7 @@ package core.authentication.tokenGenerators
 
 import java.security.SecureRandom
 
-object SecuredTokenGenerator extends TokenGenerator[Array[Byte]] {
+object SecuredTokenGenerator {
   val TOKEN_LENGTH: Int = 32
 
   def generate(): Array[Byte] = {
