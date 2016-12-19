@@ -1,7 +1,7 @@
 package core.authentication.tokenGenerators
 
 import core.entities.Defines.AuthToken
-import core.entities.User
+import core.entities.TokenContext
 
 /**
   * OAuth2 Bearer token generator.
@@ -11,17 +11,17 @@ trait BearerTokenGenerator {
 
   /**
     * Creates a JWT (Json Web Token) Authentication token with User information
-    * @param user Given User
+    * @param ctx Given TokenContext
     * @return Authentication token
     */
-  def create(user: User): Option[AuthToken]
+  def create(ctx: TokenContext): Option[AuthToken]
 
   /**
     * Decodes given Authentication token and extracts underlying user information.
     * @param token Given token
-    * @return User information
+    * @return Token information
     */
-  def decode(token: AuthToken): Option[User]
+  def decode(token: AuthToken): Option[TokenContext]
 
   /**
     * Extends token expiration timestamp with

@@ -7,12 +7,10 @@ import restapi.http.JsonSupport
 import restapi.http.entities._
 
 import scala.concurrent.ExecutionContext
-import scala.util.{Failure, Success, Try}
+import scala.util.{Success, Try}
 
-class UsersRoute(usersDao: UsersDao)(implicit ec: ExecutionContext, ac: AuthorizationContext)
-    extends Directives
-    with SecuredAccessSupport
-    with JsonSupport {
+class UsersRoute(usersDao: UsersDao)(implicit ec: ExecutionContext, ac: ApiContext)
+    extends Directives with SecuredAccessSupport with JsonSupport {
 
   val route: Route = pathPrefix("users") {
     securedAccess { ctx =>
@@ -30,11 +28,14 @@ class UsersRoute(usersDao: UsersDao)(implicit ec: ExecutionContext, ac: Authoriz
                 case None       => complete(StatusCodes.NotFound)
               }
             } ~
+              post {
+                complete(StatusCodes.OK)
+              } ~
               delete {
                 privateResourceAccess(ctx, name) {
-                  Try(usersDao.deleteUser(ctx.userId.get)) match {
-                    case Success(_)  => complete(StatusCodes.OK)
-                    case Failure(ex) => complete(StatusCodes.NotFound, ex.getMessage)
+                  Try(usersDao.deleteUser(ctx.userId)) match {
+                    case Success(_) => complete(StatusCodes.OK)
+                    case _          => complete(StatusCodes.NotFound)
                   }
                 }
               }

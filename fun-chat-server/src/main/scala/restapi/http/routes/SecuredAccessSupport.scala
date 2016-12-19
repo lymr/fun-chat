@@ -4,32 +4,28 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.OAuth2BearerToken
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import core.entities.User
+import core.entities.{TokenContext, User}
 
-import scala.util.{Failure, Success}
+import scala.util.Success
 
 private[http] trait SecuredAccessSupport {
 
-  def securedAccess(internalRoute: (User) => Route)(implicit context: AuthorizationContext): Route = {
+  def securedAccess(inner: (TokenContext) => Route)(implicit apiCtx: ApiContext): Route = {
     extractCredentials {
       case Some(OAuth2BearerToken(token)) =>
-        val userFuture = context.tokenAuthorizer(token)
-        onComplete(userFuture) {
-          case Success(Some(user)) => internalRoute(user)
-          case Success(_)          => complete(StatusCodes.Unauthorized)
-          case Failure(ex)         => complete(StatusCodes.Unauthorized, ex.getMessage)
+        val ctxFuture = apiCtx.authenticate(token)
+        onComplete(ctxFuture) {
+          case Success(Some(ctx)) => inner(ctx)
+          case _                  => complete(StatusCodes.Unauthorized)
         }
       case _ => complete(StatusCodes.Unauthorized)
     }
   }
 
-  def privateResourceAccess(ctx: User, username: String)(internalRoute: Route)(
-      implicit context: AuthorizationContext): Route = {
-
-    context.findUserByName(username) match {
-      case Some(User(id, _, _)) if id.equals(ctx.userId) => internalRoute
-      case _                                             => complete(StatusCodes.Unauthorized)
+  def privateResourceAccess(ctx: TokenContext, username: String)(inner: Route)(implicit apiCtx: ApiContext): Route = {
+    apiCtx.findUserByName(username) match {
+      case Some(User(Some(id), _, _)) if id.equals(ctx.userId) => inner
+      case _                                                   => complete(StatusCodes.NotAcceptable)
     }
   }
-
 }

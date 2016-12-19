@@ -22,10 +22,12 @@ class Bootstrap {
     flywayService.migrateDatabaseSchema()
 
     val bearerTokenGenerator = new JwtBearerTokenGenerator(SecuredTokenGenerator.generate, config.tokenExpiration)
-    val userAuthenticator = new UserAuthenticator(SecretKeyHashUtils.validate, bearerTokenGenerator, dbc.credentialsDao)
-    val authService = new AuthenticationService(userAuthenticator, dbc.usersDao)
-    val httpRouter  = new HttpRouter(dbc, authService)
-    val httpService = new HttpService(httpRouter, config)
+    val userAuthenticator =
+      new UserAuthenticator(SecretKeyHashUtils.validate, bearerTokenGenerator, dbc.credentialsDao)
+    val usersAddressBook     = new UsersAddressBookStore()
+    val authService          = new AuthenticationService(userAuthenticator, dbc.usersDao, usersAddressBook)
+    val httpRouter           = new HttpRouter(dbc, authService, usersAddressBook)
+    val httpService          = new HttpService(httpRouter, config)
     httpService.start()
   }
 }

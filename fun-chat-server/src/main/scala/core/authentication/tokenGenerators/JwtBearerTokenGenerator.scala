@@ -7,8 +7,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.DecodedJWT
 import com.typesafe.scalalogging.StrictLogging
 import core.entities.Defines.AuthToken
-import core.entities.User
-import org.joda.time.DateTime
+import core.entities.TokenContext
 
 import scala.util.{Failure, Success, Try}
 
@@ -17,10 +16,8 @@ class JwtBearerTokenGenerator(keyGenerator: () => Array[Byte], tokenExpirationIn
 
   private val secretKey = keyGenerator()
 
-  def create(user: User): Option[AuthToken] = {
+  def create(ctx: TokenContext): Option[AuthToken] = {
     val triedToken = Try {
-      require(user.userId.isDefined)
-
       val timer = Timer(tokenExpirationInterval)
 
       JWT
@@ -29,8 +26,8 @@ class JwtBearerTokenGenerator(keyGenerator: () => Array[Byte], tokenExpirationIn
         .withSubject("auth-bearer")
         .withIssuedAt(timer.current)
         .withExpiresAt(timer.next)
-        .withClaim("uid", user.userId.get)
-        .withClaim("unm", user.name)
+        .withClaim("uid", ctx.userId)
+        .withClaim("unm", ctx.username)
         .sign(Algorithm.HMAC512(secretKey))
     }
 
@@ -40,11 +37,11 @@ class JwtBearerTokenGenerator(keyGenerator: () => Array[Byte], tokenExpirationIn
     }
   }
 
-  def decode(token: AuthToken): Option[User] = {
+  def decode(token: AuthToken): Option[TokenContext] = {
     verify(token).collect {
       case (jwt: DecodedJWT) => Seq(jwt.getClaim("uid").asString, jwt.getClaim("unm").asString)
     }.map {
-      case Seq(id: String, name: String) => User(Some(id), name, DateTime.now)
+      case Seq(id: String, username: String) => TokenContext(id, username)
     }
   }
 
@@ -64,7 +61,7 @@ class JwtBearerTokenGenerator(keyGenerator: () => Array[Byte], tokenExpirationIn
       val timer = Timer(tokenExpirationInterval)
 
       val verifier = JWT
-      .require(Algorithm.HMAC512(secretKey))
+        .require(Algorithm.HMAC512(secretKey))
         .withIssuer("fun-chat")
         .withSubject("auth-bearer")
         .acceptIssuedAt(timer.current.getTime)
