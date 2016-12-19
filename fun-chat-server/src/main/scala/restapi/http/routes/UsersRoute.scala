@@ -22,20 +22,21 @@ class UsersRoute(usersDao: UsersDao)(implicit ec: ExecutionContext, ac: ApiConte
         pathPrefix("name" / Segment) { name =>
           pathEndOrSingleSlash {
             get {
-              val maybeUser = usersDao.findUserByName(name)
-              maybeUser match {
-                case Some(user) => complete(UserInformationEntity.fromUser(user))
-                case None       => complete(StatusCodes.NotFound)
+              complete {
+                val maybeUser = usersDao.findUserByName(name)
+                maybeUser match {
+                  case Some(user) => UserInformationEntity.fromUser(user)
+                  case None       => StatusCodes.NotFound
+                }
               }
             } ~
-              post {
-                complete(StatusCodes.OK)
-              } ~
               delete {
                 privateResourceAccess(ctx, name) {
-                  Try(usersDao.deleteUser(ctx.userId)) match {
-                    case Success(_) => complete(StatusCodes.OK)
-                    case _          => complete(StatusCodes.NotFound)
+                  complete {
+                    Try(usersDao.deleteUser(ctx.userId)) match {
+                      case Success(_) => StatusCodes.OK
+                      case _          => StatusCodes.NotFound
+                    }
                   }
                 }
               }

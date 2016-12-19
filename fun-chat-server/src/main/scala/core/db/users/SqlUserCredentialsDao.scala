@@ -31,7 +31,7 @@ class SqlUserCredentialsDao(credentialsGenerator: (Array[Char]) => Option[Creden
     }.map(CredentialsDaoEntity(c)).single().apply().map(toCredentialSet)
   }
 
-  override def updateUserCredentials(userId: UserID, password: UserSecret)(implicit session: DBSession): Unit = {
+  override def createUserCredentials(userId: UserID, password: UserSecret)(implicit session: DBSession): Unit = {
     val credentials = credentialsGenerator(password.toCharArray)
       .getOrElse(throw new RuntimeException("Failed to generate credential."))
 
@@ -44,6 +44,22 @@ class SqlUserCredentialsDao(credentialsGenerator: (Array[Char]) => Option[Creden
                      ucc.password  -> credentials.password,
                      ucc.salt      -> credentials.salt,
                      ucc.algorithm -> credentials.algorithm)
+    }.update().apply()
+  }
+
+  override def updateUserCredentials(userId: UserID, password: UserSecret)(implicit session: DBSession): Unit = {
+    val credentials = credentialsGenerator(password.toCharArray)
+      .getOrElse(throw new RuntimeException("Failed to generate credential."))
+
+    val id  = UUID.fromString(userId)
+    val ucc = CredentialsDaoEntity.column
+    withSQL {
+      update(CredentialsDaoEntity)
+        .set(ucc.password  -> credentials.password,
+             ucc.salt      -> credentials.salt,
+             ucc.algorithm -> credentials.algorithm)
+        .where
+        .eq(ucc.userId, id)
     }.update().apply()
   }
 

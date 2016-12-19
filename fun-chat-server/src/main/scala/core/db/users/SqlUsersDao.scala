@@ -19,7 +19,8 @@ object UserDaoEntity extends SQLSyntaxSupport[UserDaoEntity] {
     UserDaoEntity(rs.stringOpt(u.userId), rs.string(u.userName), rs.jodaDateTime(u.lastSeen))
 }
 
-class SqlUsersDao(updateCredentialsOp: (UserID, UserSecret) => Unit) extends UsersDao with PostgreSQLExtensions {
+class SqlUsersDao(createCredentialsOp: (UserID, UserSecret) => Unit, updateCredentialsOp: (UserID, UserSecret) => Unit)
+    extends UsersDao with PostgreSQLExtensions {
 
   val u = UserDaoEntity.syntax("u")
 
@@ -31,7 +32,7 @@ class SqlUsersDao(updateCredentialsOp: (UserID, UserSecret) => Unit) extends Use
       insert.into(UserDaoEntity).namedValues(uc.userId -> id, uc.userName -> name, uc.lastSeen -> currentTime)
     }.update().apply()
 
-    updateCredentialsOp(id.toString, password)
+    createCredentialsOp(id.toString, password)
     User(Some(id.toString), name, currentTime)
   }
 
@@ -52,6 +53,18 @@ class SqlUsersDao(updateCredentialsOp: (UserID, UserSecret) => Unit) extends Use
     withSQL {
       select(u.result.*).from(UserDaoEntity as u).where.eq(u.userId, id)
     }.map(UserDaoEntity(u)).single().apply().map(toUser)
+  }
+
+  override def updateUser(userId: UserID, name: String, password: String)(implicit session: DBSession): User = {
+    val id: UUID = UUID.fromString(userId)
+    val currentTime: DateTime = DateTime.now
+    val uc       = UserDaoEntity.column
+    withSQL {
+      update(UserDaoEntity).set(uc.userName -> name, uc.lastSeen -> currentTime).where.eq(uc.userId, id)
+    }.update().apply()
+
+    updateCredentialsOp(id.toString, password)
+    User(Some(userId), name, currentTime)
   }
 
   override def updateUserLastSeen(userId: UserID, timestamp: DateTime)(implicit session: DBSession): Unit = {

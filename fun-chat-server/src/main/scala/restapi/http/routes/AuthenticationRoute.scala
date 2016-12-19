@@ -5,6 +5,7 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.{Directives, Route}
 import core.authentication.AuthenticationService
 import restapi.http.JsonSupport
+import restapi.http.entities.UserCredentialsEntity
 
 import scala.concurrent.ExecutionContext
 
@@ -43,6 +44,17 @@ class AuthenticationRoute(authService: AuthenticationService)(implicit ec: Execu
           }
         }
       }
-  }
+  } ~
+      pathPrefix("credentials") {
+      pathEndOrSingleSlash {
+        securedAccess { ctx =>
+          entity(as[UserCredentialsEntity]) { credentials =>
+            patch {
+              complete(authService.updateCredentials(ctx.userId, credentials.username, credentials.password))
+            }
+          }
+        }
+      }
+    }
 
 }

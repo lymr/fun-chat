@@ -9,6 +9,8 @@ import spray.json._
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
+  implicit val userCredentialsEntityFormat = jsonFormat2(UserCredentialsEntity)
+
   implicit object UserJsonFormat extends RootJsonFormat[User] {
     override def read(json: JsValue): User = json match {
       case jsObject: JsObject =>
