@@ -1,10 +1,11 @@
-package restapi.http.routes
+package restapi.http.routes.support
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.OAuth2BearerToken
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import core.entities.{TokenContext, User}
+import restapi.http.routes.ApiContext
 
 import scala.util.Success
 

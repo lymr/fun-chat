@@ -6,6 +6,7 @@ import akka.http.scaladsl.server.{Directives, Route}
 import core.authentication.AuthenticationService
 import restapi.http.JsonSupport
 import restapi.http.entities.UserCredentialsEntity
+import restapi.http.routes.support.SecuredAccessSupport
 
 import scala.concurrent.ExecutionContext
 

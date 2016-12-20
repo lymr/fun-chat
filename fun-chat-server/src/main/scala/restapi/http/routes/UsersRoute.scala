@@ -5,6 +5,7 @@ import akka.http.scaladsl.server.{Directives, Route}
 import core.db.users.UsersDao
 import restapi.http.JsonSupport
 import restapi.http.entities._
+import restapi.http.routes.support.SecuredAccessSupport
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Success, Try}
