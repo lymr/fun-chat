@@ -2,13 +2,14 @@ package restapi.http
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import core.entities.Defines._
-import core.entities.User
+import core.entities._
 import org.joda.time.DateTime
 import restapi.http.entities._
 import spray.json._
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
+  implicit val messageEntityFormat         = jsonFormat4(MessageEntity)
   implicit val userCredentialsEntityFormat = jsonFormat2(UserCredentialsEntity)
 
   implicit object UserJsonFormat extends RootJsonFormat[User] {

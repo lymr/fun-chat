@@ -2,6 +2,7 @@ package restapi.http.routes
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{Directives, Route}
+import core.entities.MessageEntity
 import restapi.http.JsonSupport
 import restapi.http.routes.support.SecuredAccessSupport
 
@@ -14,14 +15,21 @@ class MessagingRoute(implicit ec: ExecutionContext, ac: ApiContext)
     securedAccess { ctx =>
       pathEndOrSingleSlash {
         post {
-          // broadcast message to all sers
-          complete(StatusCodes.OK)
+          decodeRequest {
+            entity(as[MessageEntity]) { message =>
+              complete(StatusCodes.OK)
+            }
+          }
         }
       } ~
         path("username" / Segment) { username =>
           pathEndOrSingleSlash {
             post {
-              complete(StatusCodes.OK, username)
+              decodeRequest {
+                entity(as[MessageEntity]) { message =>
+                  complete(StatusCodes.OK, username)
+                }
+              }
             }
           }
         }
