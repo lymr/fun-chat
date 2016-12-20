@@ -1,22 +1,21 @@
 package restapi.http.routes
 
-import java.net.InetAddress
-
 import akka.http.scaladsl.server.{Directives, Route}
-import core.authentication.{AuthenticationService, UsersAddressBook}
+import core.authentication.AuthenticationService
 import core.db.DatabaseContext
+import core.db.users.ConnectedClientsStore
 import core.entities.Defines.{AuthToken, UserID}
-import core.entities.{TokenContext, User}
+import core.entities.{ClientInformation, TokenContext, User}
 import restapi.http.JsonSupport
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class HttpRouter(dbc: DatabaseContext, authService: AuthenticationService, addressBook: UsersAddressBook)(
+class HttpRouter(dbc: DatabaseContext, authService: AuthenticationService, connectedClients: ConnectedClientsStore)(
     implicit ec: ExecutionContext)
     extends Directives
     with JsonSupport {
 
-  private implicit val ac = new ApiContext(authService.authorize, dbc.usersDao.findUserByName, addressBook.update)
+  private implicit val ac = new ApiContext(authService.authorize, dbc.usersDao.findUserByName, connectedClients.update)
 
   private val userRoute      = new UsersRoute(dbc.usersDao)
   private val authRoute      = new AuthenticationRoute(authService)
@@ -31,4 +30,4 @@ class HttpRouter(dbc: DatabaseContext, authService: AuthenticationService, addre
 
 class ApiContext(val authenticate: (AuthToken) => Future[Option[TokenContext]],
                  val findUserByName: (String) => Option[User],
-                 val updateClientAddress: (UserID, InetAddress) => Unit)
+                 val updateClientAddress: (UserID, ClientInformation) => Unit)

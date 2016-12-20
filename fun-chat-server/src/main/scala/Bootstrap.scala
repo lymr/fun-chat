@@ -2,6 +2,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import core.authentication._
 import core.authentication.tokenGenerators._
+import core.db.users.ConnectedClientsStore
 import core.db.{DatabaseContext, FlywayService}
 import restapi.http.HttpService
 import restapi.http.routes.HttpRouter
@@ -24,10 +25,10 @@ class Bootstrap {
     val bearerTokenGenerator = new JwtBearerTokenGenerator(SecuredTokenGenerator.generate, config.tokenExpiration)
     val userAuthenticator =
       new UserAuthenticator(SecretKeyHashUtils.validate, bearerTokenGenerator, dbc.credentialsDao)
-    val usersAddressBook     = new UsersAddressBookStore()
-    val authService          = new AuthenticationService(userAuthenticator, dbc.usersDao, usersAddressBook)
-    val httpRouter           = new HttpRouter(dbc, authService, usersAddressBook)
-    val httpService          = new HttpService(httpRouter, config)
+    val connectedClients = new ConnectedClientsStore()
+    val authService      = new AuthenticationService(userAuthenticator, dbc.usersDao, connectedClients)
+    val httpRouter       = new HttpRouter(dbc, authService, connectedClients)
+    val httpService      = new HttpService(httpRouter, config)
     httpService.start()
   }
 }

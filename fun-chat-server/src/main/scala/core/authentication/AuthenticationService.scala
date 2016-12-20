@@ -1,24 +1,34 @@
 package core.authentication
 
 import akka.Done
-import core.db.users.UsersDao
+import core.db.users.{ConnectedClientsStore, UsersDao}
 import core.entities.Defines._
-import core.entities.TokenContext
+import core.entities.{ClientInformation, TokenContext}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthenticationService(authenticator: UserAuthenticator, dao: UsersDao, addressStore: UsersAddressBookStore)(
+class AuthenticationService(authenticator: UserAuthenticator, dao: UsersDao, connectedClients: ConnectedClientsStore)(
     implicit ec: ExecutionContext) {
 
-  def signIn(username: String, password: UserSecret): Future[Option[AuthToken]] = Future {
-    dao.findUserByName(username).flatMap(user => authenticator.authenticate(user, password))
+  def signIn(username: String, password: UserSecret, info: ClientInformation): Future[Option[AuthToken]] = Future {
+    val tuple = for {
+      user   <- dao.findUserByName(username)
+      token  <- authenticator.authenticate(user, password)
+      userId <- user.userId
+    } yield (userId, token)
+
+    tuple.map {
+      case (userId, token) => connectedClients.update(userId, info); token
+    }
   }
 
-  def signUp(username: String, password: UserSecret): Future[Option[AuthToken]] = Future {
+  def signUp(username: String, password: UserSecret, info: ClientInformation): Future[Option[AuthToken]] = Future {
     val createUser: (String, String) => Option[AuthToken] =
       (unm, pss) => {
-        val user = dao.createUser(unm, pss)
-        authenticator.authenticate(user, password)
+        val user  = dao.createUser(unm, pss)
+        val token = authenticator.authenticate(user, password)
+        user.userId.foreach(connectedClients.update(_, info))
+        token
       }
 
     dao.findUserByName(username) match {
@@ -28,13 +38,13 @@ class AuthenticationService(authenticator: UserAuthenticator, dao: UsersDao, add
   }
 
   def signOut(userId: UserID): Future[Done] = Future {
-    addressStore.remove(userId)
+    connectedClients.remove(userId)
     Done
   }
 
   def authorize(token: AuthToken): Future[Option[TokenContext]] = Future {
     authenticator.validateToken(token).filter {
-      case TokenContext(id, _) => addressStore.isOnline(id)
+      case TokenContext(id, _) => connectedClients.isOnline(id)
     }
   }
 
