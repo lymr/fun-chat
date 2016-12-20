@@ -2,7 +2,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import core.authentication._
 import core.authentication.tokenGenerators._
-import core.db.users.ConnectedClientsStore
+import core.db.clients.ConnectedClientsStore
 import core.db.{DatabaseContext, FlywayService}
 import restapi.http.HttpService
 import restapi.http.routes.HttpRouter

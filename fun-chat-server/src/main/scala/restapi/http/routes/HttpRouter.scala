@@ -3,7 +3,7 @@ package restapi.http.routes
 import akka.http.scaladsl.server.{Directives, Route}
 import core.authentication.AuthenticationService
 import core.db.DatabaseContext
-import core.db.users.ConnectedClientsStore
+import core.db.clients.ConnectedClientsStore
 import core.entities.Defines.{AuthToken, UserID}
 import core.entities.{ClientInformation, TokenContext, User}
 import restapi.http.JsonSupport

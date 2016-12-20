@@ -1,4 +1,4 @@
-package core.db.users
+package core.db.clients
 
 import core.entities.ClientInformation
 import core.entities.Defines.UserID
