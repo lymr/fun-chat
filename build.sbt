@@ -22,6 +22,8 @@ lazy val `fun-chat-server` = (project in file("fun-chat-server"))
       "commons-pool"               % "commons-pool"          % "1.6",
       "commons-dbcp"               % "commons-dbcp"          % "1.4",
       "ch.qos.logback"             % "logback-classic"       % "1.1.7",
-      "org.flywaydb"               % "flyway-core"           % "4.0.3"
+      "org.flywaydb"               % "flyway-core"           % "4.0.3",
+      "org.scalatest"              % "scalatest_2.11"        % "3.0.1" % "test",
+      "org.mockito"                % "mockito-all"           % "1.10.19" % "test"
     )
   )

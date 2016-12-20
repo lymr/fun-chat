@@ -16,8 +16,8 @@ class ConnectedClientsStore() {
     usersData.get(userId)
   }
 
-  def update(userId: UserID, address: ClientInformation): Unit = {
-    usersData.update(userId, address)
+  def update(userId: UserID, info: ClientInformation): Unit = {
+    usersData.update(userId, info)
   }
 
   def remove(userId: UserID): Unit = {
