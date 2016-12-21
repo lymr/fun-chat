@@ -4,6 +4,7 @@ import core.authentication._
 import core.authentication.tokenGenerators._
 import core.db.clients.ConnectedClientsStore
 import core.db.{DatabaseContext, FlywayService}
+import core.entities.Timer
 import restapi.http.HttpService
 import restapi.http.routes.HttpRouter
 import utils.Configuration
@@ -22,7 +23,7 @@ class Bootstrap {
     val flywayService = new FlywayService(config)
     flywayService.migrateDatabaseSchema()
 
-    val bearerTokenGenerator = new JwtBearerTokenGenerator(SecuredTokenGenerator.generate, config.tokenExpiration)
+    val bearerTokenGenerator = new JwtBearerTokenGenerator(SecuredTokenGenerator.generate, Timer(config.tokenExpiration))
     val userAuthenticator =
       new UserAuthenticator(SecretKeyHashUtils.validate, bearerTokenGenerator, dbc.credentialsDao)
     val connectedClients = new ConnectedClientsStore()

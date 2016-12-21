@@ -1,31 +1,28 @@
 package core.authentication.tokenGenerators
 
-import java.util.Date
-
 import com.auth0.jwt._
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.DecodedJWT
 import com.typesafe.scalalogging.StrictLogging
 import core.entities.Defines.AuthToken
-import core.entities.TokenContext
+import core.entities.{Timer, TokenContext}
 
 import scala.util.{Failure, Success, Try}
 
-class JwtBearerTokenGenerator(keyGenerator: () => Array[Byte], tokenExpirationInterval: Long)
+class JwtBearerTokenGenerator(keyGenerator: () => Array[Byte], timer: Timer)
     extends BearerTokenGenerator with StrictLogging {
 
   private val secretKey = keyGenerator()
 
   def create(ctx: TokenContext): Option[AuthToken] = {
     val triedToken = Try {
-      val timer = Timer(tokenExpirationInterval)
-
+      val timestamp = timer.freeze
       JWT
         .create()
         .withIssuer("fun-chat")
         .withSubject("auth-bearer")
-        .withIssuedAt(timer.current)
-        .withExpiresAt(timer.next)
+        .withIssuedAt(timestamp.take)
+        .withExpiresAt(timestamp.next)
         .withClaim("uid", ctx.userId)
         .withClaim("unm", ctx.username)
         .sign(Algorithm.HMAC512(secretKey))
@@ -58,14 +55,13 @@ class JwtBearerTokenGenerator(keyGenerator: () => Array[Byte], tokenExpirationIn
 
   private def verify(token: AuthToken): Option[DecodedJWT] = {
     val triedVerify = Try {
-      val timer = Timer(tokenExpirationInterval)
 
       val verifier = JWT
         .require(Algorithm.HMAC512(secretKey))
         .withIssuer("fun-chat")
         .withSubject("auth-bearer")
-        .acceptIssuedAt(timer.current.getTime)
-        .acceptExpiresAt(timer.current.getTime)
+        .acceptIssuedAt(timer.intervalStep)
+        .acceptExpiresAt(timer.intervalStep)
         .build()
 
       verifier.verify(token)
@@ -76,25 +72,4 @@ class JwtBearerTokenGenerator(keyGenerator: () => Array[Byte], tokenExpirationIn
       case Failure(ex)  => logger.error("Failed to verify token!", ex); None
     }
   }
-}
-
-/**
-  * Timer with constant time interval
-  * @param expirationInterval increment time interval in MINUTES
-  */
-private case class Timer(expirationInterval: Long) {
-
-  private val timestamp = System.currentTimeMillis
-
-  /**
-    * Get current timestamp
-    * @return
-    */
-  def current: Date = new Date(timestamp)
-
-  /**
-    * Get next interval timestamp, (current + expiration interval)
-    * @return next timestamp
-    */
-  def next: Date = new Date(timestamp + expirationInterval)
 }

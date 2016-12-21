@@ -4,18 +4,17 @@ import com.typesafe.config.ConfigFactory
 
 class Configuration {
 
-
-  private val config     = ConfigFactory.load()
-  private val httpConfig = config.getConfig("http")
+  private val config         = ConfigFactory.load()
+  private val httpConfig     = config.getConfig("http")
   private val databaseConfig = config.getConfig("production.db.default")
-  private val authorization = config.getConfig("authorization")
+  private val authorization  = config.getConfig("authorization")
 
-  val httpHost = httpConfig.getString("interface")
-  val httpPort = httpConfig.getInt("port")
+  val httpHost: String = httpConfig.getString("interface")
+  val httpPort: Int    = httpConfig.getInt("port")
 
-  val dbUrl      = databaseConfig.getString("url")
-  val dbUser     = databaseConfig.getString("user")
-  val dbPassword = databaseConfig.getString("password")
+  val dbUrl: String      = databaseConfig.getString("url")
+  val dbUser: String     = databaseConfig.getString("user")
+  val dbPassword: String = databaseConfig.getString("password")
 
-  val tokenExpiration = authorization.getDuration("token-expiration").toMillis
+  val tokenExpiration: Long = authorization.getDuration("token-expiration").getSeconds
 }
