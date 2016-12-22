@@ -4,11 +4,20 @@ import org.hamcrest.Matcher
 import org.mockito.MockitoAnnotations
 import org.mockito.verification.VerificationMode
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, FunSuiteLike, Suite}
+import org.scalatest.{
+  BeforeAndAfterEach,
+  FunSuiteLike,
+  Matchers,
+  WordSpecLike,
+  Suite => iSuite,
+  TestSuite => iTestSuite
+}
 
-trait TestSuite extends FunSuiteLike with MockitoSuite
+trait TestSuite extends FunSuiteLike with MockitoSupport
 
-trait MockitoSuite extends Suite with MockitoSugar with BeforeAndAfterEach {
+trait TestSpec extends WordSpecLike with Matchers with MockitoSupport
+
+trait MockitoSupport extends iSuite with iTestSuite with MockitoSugar with BeforeAndAfterEach {
 
   override def beforeEach(): Unit = {
     MockitoAnnotations.initMocks(this)

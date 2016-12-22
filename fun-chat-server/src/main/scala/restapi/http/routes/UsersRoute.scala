@@ -8,7 +8,7 @@ import restapi.http.entities._
 import restapi.http.routes.support.SecuredAccessSupport
 
 import scala.concurrent.ExecutionContext
-import scala.util.{Success, Try}
+import scala.util.Try
 
 class UsersRoute(usersDao: UsersDao)(implicit ec: ExecutionContext, ac: ApiContext)
     extends Directives with SecuredAccessSupport with JsonSupport {
@@ -34,10 +34,8 @@ class UsersRoute(usersDao: UsersDao)(implicit ec: ExecutionContext, ac: ApiConte
               delete {
                 privateResourceAccess(ctx, name) {
                   complete {
-                    Try(usersDao.deleteUser(ctx.userId)) match {
-                      case Success(_) => StatusCodes.OK
-                      case _          => StatusCodes.NotFound
-                    }
+                    Try(usersDao.deleteUser(ctx.userId))
+                    StatusCodes.OK
                   }
                 }
               }

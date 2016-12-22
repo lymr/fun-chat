@@ -17,7 +17,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
       case jsObject: JsObject =>
         jsObject.getFields("userId", "name", "lastSeen") match {
           case Seq(userId, JsString(name), JsNumber(lastSeen)) =>
-            User(userId.convertTo[Option[UserID]], name, new DateTime(lastSeen))
+            User(userId.convertTo[Option[UserID]], name, new DateTime(lastSeen.toLong))
         }
       case _ => deserializationError("An error occurred while serializing User entity.")
     }
@@ -34,7 +34,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
       case jsObject: JsObject =>
         jsObject.getFields("name", "lastSeen") match {
           case Seq(JsString(name), JsNumber(lastSeen)) =>
-            UserInformationEntity(name, new DateTime(lastSeen))
+            UserInformationEntity(name, new DateTime(lastSeen.toLong))
         }
       case _ => deserializationError("An error occurred while serializing User entity.")
     }
