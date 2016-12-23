@@ -12,12 +12,12 @@ import org.joda.time.DateTime
 import org.mockito.Mock
 import restapi.http.JsonSupport
 import restapi.http.entities.UserInformationEntity
-import restapi.http.routes.UserRouteSuite._
+import restapi.http.routes.UserRouteSpec._
 import scalikejdbc.DBSession
 
 import scala.concurrent.Future
 
-class UserRouteSuite extends TestSpec with ScalatestRouteTest with JsonSupport {
+class UserRouteSpec extends TestSpec with ScalatestRouteTest with JsonSupport {
 
   @Mock
   private var mockUsersDao: UsersDao = _
@@ -38,8 +38,9 @@ class UserRouteSuite extends TestSpec with ScalatestRouteTest with JsonSupport {
     userRoute = new UsersRoute(mockUsersDao)
   }
 
-  super.afterAll()
   override def afterAll(): Unit = {
+    super.afterAll()
+
     cleanUp()
   }
 
@@ -77,7 +78,6 @@ class UserRouteSuite extends TestSpec with ScalatestRouteTest with JsonSupport {
     Delete("/users/name/user-id-1") ~> addHeader(Authorization(OAuth2BearerToken(TOKEN_1))) ~> userRoute.route ~> check {
       response.status shouldEqual StatusCodes.OK
       verify(mockUsersDao, times(1)).deleteUser(eq(USER_ID_1))(any[DBSession])
-
     }
   }
 
@@ -90,7 +90,7 @@ class UserRouteSuite extends TestSpec with ScalatestRouteTest with JsonSupport {
   }
 }
 
-private object UserRouteSuite {
+private object UserRouteSpec {
   val USER_ID_1 = "user-id-1"
   val USER_ID_2 = "user-id-2"
   val USER_1    = "user-1"

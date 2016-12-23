@@ -4,7 +4,8 @@ import akka.Done
 import core.db.clients.ConnectedClientsStore
 import core.db.users.UsersDao
 import core.entities.Defines._
-import core.entities.{ClientInformation, TokenContext}
+import core.entities.TokenContext
+import restapi.http.entities.ClientInformation
 
 import scala.concurrent.{ExecutionContext, Future}
 

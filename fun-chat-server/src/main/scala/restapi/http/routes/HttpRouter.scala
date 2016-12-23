@@ -5,8 +5,9 @@ import core.authentication.AuthenticationService
 import core.db.DatabaseContext
 import core.db.clients.ConnectedClientsStore
 import core.entities.Defines.{AuthToken, UserID}
-import core.entities.{ClientInformation, TokenContext, User}
+import core.entities.{TokenContext, User}
 import restapi.http.JsonSupport
+import restapi.http.entities.ClientInformation
 
 import scala.concurrent.{ExecutionContext, Future}
 
