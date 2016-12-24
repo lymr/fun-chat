@@ -53,8 +53,8 @@ class AuthenticationRoute(authService: AuthenticationService)(implicit ec: Execu
       pathPrefix("credentials") {
       pathEndOrSingleSlash {
         securedAccess { ctx =>
-          entity(as[UserCredentialsEntity]) { credentials =>
-            patch {
+          patch {
+            entity(as[UserCredentialsEntity]) { credentials =>
               complete(authService.updateCredentials(ctx.userId, credentials.username, credentials.password))
             }
           }

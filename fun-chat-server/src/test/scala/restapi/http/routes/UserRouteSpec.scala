@@ -75,14 +75,14 @@ class UserRouteSpec extends TestSpec with ScalatestRouteTest with JsonSupport {
 
   "check delete: users/name/id endpoint" in {
     Delete("/users/name/user-id-1") ~> addHeader(Authorization(OAuth2BearerToken(TOKEN_1))) ~> userRoute.route ~> check {
-      response.status shouldEqual StatusCodes.OK
+      response withStatus StatusCodes.OK
       verify(mockUsersDao, times(1)).deleteUser(eq(USER_ID_1))(any[DBSession])
     }
   }
 
   "check try to delete other user-id: users/name/id endpoint" in {
     Delete("/users/name/user-id-1") ~> addHeader(Authorization(OAuth2BearerToken(TOKEN_2))) ~> userRoute.route ~> check {
-      response.status shouldEqual StatusCodes.NotAcceptable
+      response withStatus StatusCodes.NotAcceptable
       verify(mockUsersDao, times(0)).deleteUser(eq(USER_ID_1))(any[DBSession])
       verify(mockUsersDao, times(0)).deleteUser(eq(USER_ID_2))(any[DBSession])
     }
