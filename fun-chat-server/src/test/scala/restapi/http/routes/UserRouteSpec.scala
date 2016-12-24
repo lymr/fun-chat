@@ -24,8 +24,7 @@ class UserRouteSpec extends TestSpec with ScalatestRouteTest with JsonSupport {
 
   implicit private var mockApiContext: ApiContext = new ApiContext(
     (token) => Future.successful(BEARER_TOKEN_GENERATOR.decode(token)),
-    (name) => userByName(name),
-    (_, _) => Unit)
+    (name) => userByName(name))
 
   private var userRoute: UsersRoute = _
 

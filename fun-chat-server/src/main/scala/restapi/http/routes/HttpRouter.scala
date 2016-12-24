@@ -4,10 +4,9 @@ import akka.http.scaladsl.server.{Directives, Route}
 import core.authentication.AuthenticationService
 import core.db.DatabaseContext
 import core.db.clients.ConnectedClientsStore
-import core.entities.Defines.{AuthToken, UserID}
+import core.entities.Defines.AuthToken
 import core.entities.{TokenContext, User}
 import restapi.http.JsonSupport
-import restapi.http.entities.ClientInformation
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -16,7 +15,8 @@ class HttpRouter(dbc: DatabaseContext, authService: AuthenticationService, conne
     extends Directives
     with JsonSupport {
 
-  private implicit val ac = new ApiContext(authService.authorize, dbc.usersDao.findUserByName, connectedClients.update)
+  //TODO: Add CORS support !
+  private implicit val ac = new ApiContext(authService.authorize, dbc.usersDao.findUserByName)
 
   private val userRoute      = new UsersRoute(dbc.usersDao)
   private val authRoute      = new AuthenticationRoute(authService)
@@ -30,5 +30,4 @@ class HttpRouter(dbc: DatabaseContext, authService: AuthenticationService, conne
 }
 
 class ApiContext(val authenticate: (AuthToken) => Future[Option[TokenContext]],
-                 val findUserByName: (String) => Option[User],
-                 val updateClientAddress: (UserID, ClientInformation) => Unit)
+                 val findUserByName: (String) => Option[User])
