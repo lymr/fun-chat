@@ -17,7 +17,7 @@ private[http] trait CorsSupport {
     }
   }
 
-  def preflightCorsCheck: Route = {
+  private def preflightCorsCheck: Route = {
     options {
       complete {
         HttpResponse(StatusCodes.OK).withHeaders(

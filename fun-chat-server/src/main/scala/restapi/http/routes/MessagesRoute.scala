@@ -1,14 +1,16 @@
 package restapi.http.routes
 
+import akka.actor.ActorRef
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{Directives, Route}
+import messages.entities.{ForwardRawMessage, ForwardUserMessage}
 import restapi.http.JsonSupport
 import restapi.http.entities.MessageEntity
 import restapi.http.routes.support.SecuredAccessSupport
 
 import scala.concurrent.ExecutionContext
 
-class MessagingRoute(implicit ec: ExecutionContext, ac: ApiContext)
+class MessagesRoute(messagesRouter: ActorRef)(implicit ec: ExecutionContext, ac: ApiContext)
     extends Directives with SecuredAccessSupport with JsonSupport {
 
   val route: Route = pathPrefix("messages") {
@@ -17,17 +19,19 @@ class MessagingRoute(implicit ec: ExecutionContext, ac: ApiContext)
         post {
           decodeRequest {
             entity(as[MessageEntity]) { message =>
-              complete(StatusCodes.OK)
+              messagesRouter ! ForwardRawMessage(message, ctx)
+              complete(StatusCodes.Accepted)
             }
           }
         }
       } ~
-        path("username" / Segment) { username =>
+        path("recipient" / Segment) { recipientName =>
           pathEndOrSingleSlash {
             post {
               decodeRequest {
                 entity(as[MessageEntity]) { message =>
-                  complete(StatusCodes.OK, username)
+                  messagesRouter ! ForwardUserMessage(message, recipientName, ctx)
+                  complete(StatusCodes.Accepted)
                 }
               }
             }

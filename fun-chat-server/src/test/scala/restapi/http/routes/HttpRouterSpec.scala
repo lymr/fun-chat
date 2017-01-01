@@ -1,10 +1,12 @@
 package restapi.http.routes
 
+import akka.actor.ActorRef
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.{InvalidOriginRejection, MissingHeaderRejection}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
+import akka.testkit.TestProbe
 import base.TestSpec
 import core.authentication.AuthenticationService
 import core.db.DatabaseContext
@@ -17,6 +19,9 @@ import restapi.http.routes.support.AllowedOrigins._
 import spray.json._
 
 class HttpRouterSpec extends TestSpec with ScalatestRouteTest with JsonSupport {
+
+  val probe: TestProbe    = TestProbe()
+  val mockActor: ActorRef = probe.ref
 
   @Mock
   private var dbContext: DatabaseContext = _
@@ -31,7 +36,7 @@ class HttpRouterSpec extends TestSpec with ScalatestRouteTest with JsonSupport {
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    httpRouter = new HttpRouter(dbContext, authService, connectedClientsStore)
+    httpRouter = new HttpRouter(dbContext, authService, connectedClientsStore, mockActor)
   }
 
   override def afterEach(): Unit = {
@@ -75,8 +80,14 @@ class HttpRouterSpec extends TestSpec with ScalatestRouteTest with JsonSupport {
     }
   }
 
-  "messaging route check" in {
-    Post("/v1/messages/username/some-id") ~> addHeader(Origin(HttpOrigin("http", Host("fun-chat", 8080)))) ~> httpRouter.routes ~> check {
+  "messages route check" in {
+    Post("/v1/messages/") ~> addHeader(Origin(HttpOrigin("http", Host("fun-chat", 8080)))) ~> httpRouter.routes ~> check {
+      handled shouldBe true
+    }
+  }
+
+  "messages route recipient endpoint check" in {
+    Post("/v1/messages/recipient/some-name") ~> addHeader(Origin(HttpOrigin("http", Host("fun-chat", 8080)))) ~> httpRouter.routes ~> check {
       handled shouldBe true
     }
   }

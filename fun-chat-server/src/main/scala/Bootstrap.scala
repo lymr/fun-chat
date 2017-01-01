@@ -1,10 +1,13 @@
 import akka.actor.ActorSystem
+import akka.routing.FromConfig
 import akka.stream.ActorMaterializer
 import core.authentication._
 import core.authentication.tokenGenerators._
 import core.db.clients.ConnectedClientsStore
 import core.db.{DatabaseContext, FlywayService}
 import core.entities.Timer
+import messages.MessageProcessor
+import messages.MessageProcessor.MessageProcessorContext
 import restapi.http.HttpService
 import restapi.http.routes.HttpRouter
 import utils.Configuration
@@ -14,7 +17,7 @@ import scala.concurrent.ExecutionContext
 class Bootstrap {
 
   def startup(): Unit = {
-    implicit val actorSystem                     = ActorSystem()
+    implicit val actorSystem: ActorSystem        = ActorSystem()
     implicit val materializer: ActorMaterializer = ActorMaterializer()
     implicit val ec: ExecutionContext            = actorSystem.dispatcher
 
@@ -24,12 +27,15 @@ class Bootstrap {
     flywayService.migrateDatabaseSchema()
 
     val bearerTokenGenerator = new JwtBearerTokenGenerator(SecuredTokenGenerator.generate, Timer(config.tokenExpiration))
-    val userAuthenticator =
-      new UserAuthenticator(SecretKeyHashUtils.validate, bearerTokenGenerator, dbc.credentialsDao)
-    val connectedClients = new ConnectedClientsStore()
-    val authService      = new AuthenticationService(userAuthenticator, dbc.usersDao, connectedClients)
-    val httpRouter       = new HttpRouter(dbc, authService, connectedClients)
-    val httpService      = new HttpService(httpRouter, config)
+    val userAuthenticator    = new UserAuthenticator(SecretKeyHashUtils.validate, bearerTokenGenerator, dbc.credentialsDao)
+    val connectedClients     = new ConnectedClientsStore()
+
+    val msgProcCtx     = MessageProcessorContext(dbc.usersDao.findUserByName, connectedClients.find)
+    val messagesRouter = actorSystem.actorOf(FromConfig.props(MessageProcessor.props(msgProcCtx)), "messagesRouter")
+
+    val authService = new AuthenticationService(userAuthenticator, dbc.usersDao, connectedClients)
+    val httpRouter  = new HttpRouter(dbc, authService, connectedClients, messagesRouter)
+    val httpService = new HttpService(httpRouter, config)
     httpService.start()
   }
 }

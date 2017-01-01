@@ -1,5 +1,6 @@
 package restapi.http.routes
 
+import akka.actor.ActorRef
 import akka.http.scaladsl.server.{Directives, Route}
 import core.authentication.AuthenticationService
 import core.db.DatabaseContext
@@ -11,20 +12,23 @@ import restapi.http.routes.support.CorsSupport
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class HttpRouter(dbc: DatabaseContext, authService: AuthenticationService, connectedClients: ConnectedClientsStore)(
-    implicit ec: ExecutionContext) extends Directives with JsonSupport with CorsSupport {
+class HttpRouter(dbc: DatabaseContext,
+                 authService: AuthenticationService,
+                 connectedClients: ConnectedClientsStore,
+                 messagesRouter: ActorRef)(implicit ec: ExecutionContext)
+    extends Directives with JsonSupport with CorsSupport {
 
   private implicit val ac = new ApiContext(authService.authorize, dbc.usersDao.findUserByName)
 
   private val userRoute      = new UsersRoute(dbc.usersDao)
   private val authRoute      = new AuthenticationRoute(authService)
-  private val messagingRoute = new MessagingRoute()
+  private val messagesRoute = new MessagesRoute(messagesRouter)
 
   val routes: Route = pathPrefix("v1") {
     AccessControlCheck {
       authRoute.route ~
         userRoute.route ~
-        messagingRoute.route
+        messagesRoute.route
     }
   }
 }
