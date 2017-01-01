@@ -28,3 +28,18 @@ lazy val `fun-chat-server` = (project in file("fun-chat-server"))
       "org.mockito"                % "mockito-all"           % "1.10.19" % "test"
     )
   )
+
+lazy val `fun-chat-client` = (project in file("fun-chat-client"))
+  .settings(commons: _*)
+  .settings(
+    libraryDependencies ++= Seq(
+      "joda-time"                  % "joda-time"             % "2.9.6",
+      "com.typesafe.akka"          %% "akka-http"            % "10.0.0",
+      "com.typesafe.akka"          %% "akka-http-core"       % "10.0.0",
+      "com.typesafe.akka"          %% "akka-http-spray-json" % "10.0.0",
+      "com.typesafe.akka"          %% "akka-http-testkit"    % "10.0.0" % "test",
+      "com.typesafe.scala-logging" %% "scala-logging"        % "3.5.0",
+      "ch.qos.logback"             % "logback-classic"       % "1.1.7",
+      "org.mockito"                % "mockito-all"           % "1.10.19" % "test"
+    )
+  )
