@@ -5,6 +5,7 @@ import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import com.typesafe.config.ConfigFactory
 import restapi.http.routes.support.AllowedOrigins._
 
 import scala.collection.immutable.Seq
@@ -32,8 +33,8 @@ private[http] trait CorsSupport {
 }
 
 object AllowedOrigins {
-  private val HTTP_ORIGIN  = HttpOrigin("http", Host("fun-chat", 8080))
-  private val HTTPS_ORIGIN = HttpOrigin("https", Host("fun-chat", 443))
+  private val httpPort: Int  = ConfigFactory.load().getConfig("http").getInt("port")
+  private val HTTP_ORIGIN  = HttpOrigin("http", Host("fun-chat", httpPort))
 
-  val allowedOrigins = Seq(HTTP_ORIGIN, HTTPS_ORIGIN)
+  val allowedOrigins = Seq(HTTP_ORIGIN)
 }
