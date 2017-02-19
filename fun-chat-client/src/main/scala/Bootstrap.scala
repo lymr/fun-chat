@@ -1,6 +1,8 @@
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import commands.runner.ClientCommandsLoop
+import rest.client.HttpRestClient
+import utils.Configuration
 
 import scala.concurrent.ExecutionContext
 
@@ -12,8 +14,10 @@ class Bootstrap() {
     implicit val materializer: ActorMaterializer = ActorMaterializer()
     implicit val ec: ExecutionContext            = actorSystem.dispatcher
 
-    val exitCallback: (Int) => Unit = System.exit
-    val clientCommandsLoop = new ClientCommandsLoop(exitCallback)
+    val config = new Configuration()
+
+    val restClient         = new HttpRestClient(config)
+    val clientCommandsLoop = new ClientCommandsLoop(restClient, System.exit)
     clientCommandsLoop.start()
   }
 }

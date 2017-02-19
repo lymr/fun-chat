@@ -3,11 +3,12 @@ package commands.runner
 import com.typesafe.scalalogging.StrictLogging
 import commands.ClientCommands._
 import commands._
+import rest.client.RestClient
 
 import scala.io.StdIn.readLine
 import scala.util.Try
 
-class ClientCommandsLoop(exitCallback: (Int) => Unit) extends StrictLogging {
+class ClientCommandsLoop(restClient: RestClient, exitCallback: (Int) => Unit) extends StrictLogging {
 
   def start(): Unit = {
     println(
@@ -18,9 +19,9 @@ class ClientCommandsLoop(exitCallback: (Int) => Unit) extends StrictLogging {
       do {
         val input: String = readLine()
         input match {
-          case HELP         => HelpCommand().execute()
-          case SIGN_IN      => println("Method not implemented!")
-          case SIGN_UP      => SignUpCommand().execute()
+          case HELP         => HelpCommand.execute()
+          case SIGN_IN      => SignInCommand(restClient).execute()
+          case SIGN_UP      => SignUpCommand(restClient).execute()
           case SIGN_OUT     => println("Method not implemented!")
           case ONLINE_USERS => println("Method not implemented!")
           case SEND_MESSAGE => println("Method not implemented!")
