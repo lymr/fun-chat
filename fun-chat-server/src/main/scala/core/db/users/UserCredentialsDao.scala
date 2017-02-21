@@ -1,7 +1,7 @@
 package core.db.users
 
-import core.entities.CredentialSet
-import core.entities.Defines.{UserID, UserSecret}
+import core.entities.Defines.UserSecret
+import core.entities.{CredentialSet, UserID}
 import scalikejdbc._
 
 trait UserCredentialsDao {

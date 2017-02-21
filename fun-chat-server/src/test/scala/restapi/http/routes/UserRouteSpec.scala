@@ -7,7 +7,7 @@ import base.TestSpec
 import core.authentication.tokenGenerators.JwtBearerTokenGenerator
 import core.db.users.UsersDao
 import core.entities.Defines.AuthToken
-import core.entities.{Timer, TokenContext, User}
+import core.entities.{Timer, TokenContext, User, UserID}
 import org.joda.time.DateTime
 import org.mockito.Mock
 import restapi.http.JsonSupport
@@ -22,9 +22,8 @@ class UserRouteSpec extends TestSpec with ScalatestRouteTest with JsonSupport {
   @Mock
   private var mockUsersDao: UsersDao = _
 
-  implicit private var mockApiContext: ApiContext = new ApiContext(
-    (token) => Future.successful(BEARER_TOKEN_GENERATOR.decode(token)),
-    (name) => userByName(name))
+  implicit private var mockApiContext: ApiContext =
+    new ApiContext((token) => Future.successful(BEARER_TOKEN_GENERATOR.decode(token)), (name) => userByName(name))
 
   private var userRoute: UsersRoute = _
 
@@ -32,8 +31,8 @@ class UserRouteSpec extends TestSpec with ScalatestRouteTest with JsonSupport {
     super.beforeEach()
 
     when(mockUsersDao.findUsers()).thenReturn(USERS)
-    when(mockUsersDao.findUserByName(eq(USER_ID_1))(any[DBSession])).thenReturn(Some(USERS.head))
-    when(mockUsersDao.findUserByName(eq(USER_ID_2))(any[DBSession])).thenReturn(None)
+    when(mockUsersDao.findUserByName(eq(USER_1))(any[DBSession])).thenReturn(Some(USERS.head))
+    when(mockUsersDao.findUserByName(eq(USER_2))(any[DBSession])).thenReturn(None)
     userRoute = new UsersRoute(mockUsersDao)
   }
 
@@ -67,21 +66,21 @@ class UserRouteSpec extends TestSpec with ScalatestRouteTest with JsonSupport {
     }
   }
 
-  "check get: users/name/id endpoint" in {
-    Get("/users/name/user-id-1") ~> addHeader(Authorization(OAuth2BearerToken(TOKEN_1))) ~> userRoute.route ~> check {
+  "check get: users/name/x endpoint" in {
+    Get("/users/name/user-1") ~> addHeader(Authorization(OAuth2BearerToken(TOKEN_1))) ~> userRoute.route ~> check {
       entityAs[UserInformationEntity] shouldEqual UserInformationEntity.fromUser(USERS.head)
     }
   }
 
-  "check delete: users/name/id endpoint" in {
-    Delete("/users/name/user-id-1") ~> addHeader(Authorization(OAuth2BearerToken(TOKEN_1))) ~> userRoute.route ~> check {
+  "check delete: users/name/x endpoint" in {
+    Delete("/users/name/user-1") ~> addHeader(Authorization(OAuth2BearerToken(TOKEN_1))) ~> userRoute.route ~> check {
       response withStatus StatusCodes.OK
       verify(mockUsersDao, times(1)).deleteUser(eq(USER_ID_1))(any[DBSession])
     }
   }
 
-  "check try to delete other user-id: users/name/id endpoint" in {
-    Delete("/users/name/user-id-1") ~> addHeader(Authorization(OAuth2BearerToken(TOKEN_2))) ~> userRoute.route ~> check {
+  "check try to delete other user-name: users/name/id endpoint" in {
+    Delete("/users/name/user-1") ~> addHeader(Authorization(OAuth2BearerToken(TOKEN_2))) ~> userRoute.route ~> check {
       response withStatus StatusCodes.NotAcceptable
       verify(mockUsersDao, times(0)).deleteUser(eq(USER_ID_1))(any[DBSession])
       verify(mockUsersDao, times(0)).deleteUser(eq(USER_ID_2))(any[DBSession])
@@ -90,19 +89,20 @@ class UserRouteSpec extends TestSpec with ScalatestRouteTest with JsonSupport {
 }
 
 private object UserRouteSpec {
-  val USER_ID_1 = "user-id-1"
-  val USER_ID_2 = "user-id-2"
+  val USER_ID_1 = UserID("user-id-1")
+  val USER_ID_2 = UserID("user-id-2")
   val USER_1    = "user-1"
   val USER_2    = "user-2"
 
-  val USERS = Seq(User(Some(USER_ID_1), USER_1, DateTime.now), User(Some(USER_ID_2), USER_2, DateTime.now))
+  val USERS = Seq(User(USER_ID_1, USER_1, DateTime.now), User(USER_ID_2, USER_2, DateTime.now))
 
   val BEARER_TOKEN_GENERATOR = new JwtBearerTokenGenerator(() => "test-secret".toCharArray.map(_.toByte), Timer(180))
   val TOKEN_1: AuthToken     = BEARER_TOKEN_GENERATOR.create(TokenContext(USER_ID_1, USER_1)).get
   val TOKEN_2: AuthToken     = BEARER_TOKEN_GENERATOR.create(TokenContext(USER_ID_2, USER_2)).get
 
   val userByName: (String) => Option[User] = {
-    case USER_ID_1 => Some(User(Some(USER_ID_1), USER_1, DateTime.now))
-    case USER_ID_2 => Some(User(Some(USER_ID_2), USER_2, DateTime.now))
+    case USER_1 => Some(User(USER_ID_1, USER_1, DateTime.now))
+    case USER_2 => Some(User(USER_ID_2, USER_2, DateTime.now))
+    case _      => None
   }
 }

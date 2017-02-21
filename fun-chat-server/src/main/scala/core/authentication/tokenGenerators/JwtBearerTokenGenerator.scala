@@ -5,12 +5,14 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.DecodedJWT
 import com.typesafe.scalalogging.StrictLogging
 import core.entities.Defines.AuthToken
-import core.entities.{Timer, TokenContext}
+import core.entities.{Timer, TokenContext, UserID}
+import restapi.http.JsonSupport
+import spray.json._
 
 import scala.util.{Failure, Success, Try}
 
 class JwtBearerTokenGenerator(keyGenerator: () => Array[Byte], timer: Timer)
-    extends BearerTokenGenerator with StrictLogging {
+    extends BearerTokenGenerator with JsonSupport with StrictLogging {
 
   private val secretKey = keyGenerator()
 
@@ -23,7 +25,7 @@ class JwtBearerTokenGenerator(keyGenerator: () => Array[Byte], timer: Timer)
         .withSubject("auth-bearer")
         .withIssuedAt(timestamp.take)
         .withExpiresAt(timestamp.next)
-        .withClaim("uid", ctx.userId)
+        .withClaim("uid", ctx.userId.toJson.toString)
         .withClaim("unm", ctx.username)
         .sign(Algorithm.HMAC512(secretKey))
     }
@@ -38,7 +40,7 @@ class JwtBearerTokenGenerator(keyGenerator: () => Array[Byte], timer: Timer)
     verify(token).map {
       case (jwt: DecodedJWT) => Seq(jwt.getClaim("uid").asString, jwt.getClaim("unm").asString)
     }.map {
-      case Seq(id: String, username: String) => TokenContext(id, username)
+      case Seq(jsId: String, username: String) => TokenContext(jsId.parseJson.convertTo[UserID], username)
     }
   }
 

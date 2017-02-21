@@ -8,7 +8,7 @@ import base.TestSpec
 import core.authentication.AuthenticationService
 import core.authentication.tokenGenerators.JwtBearerTokenGenerator
 import core.entities.Defines.AuthToken
-import core.entities.{Timer, TokenContext, User}
+import core.entities.{Timer, TokenContext, User, UserID}
 import org.joda.time.DateTime
 import org.mockito.Mock
 import restapi.http.JsonSupport
@@ -133,7 +133,7 @@ class AuthenticationRouteSpec extends TestSpec with ScalatestRouteTest with Json
 }
 
 private object AuthenticationRouteSpec {
-  val USER_ID      = "user-id-1"
+  val USER_ID      = UserID("user-id-1")
   val USERNAME     = "username-1"
   val PASSWORD     = "p@ssword"
   val NEW_PASSWORD = "p@sswo7d"
@@ -144,7 +144,7 @@ private object AuthenticationRouteSpec {
   val TOKEN: AuthToken       = BEARER_TOKEN_GENERATOR.create(TokenContext(USER_ID, USERNAME)).get
 
   val userByName: (String) => Option[User] = {
-    case USER_ID => Some(User(Some(USER_ID), USERNAME, DateTime.now))
-    case _       => None
+    case USERNAME => Some(User(USER_ID, USERNAME, DateTime.now))
+    case _        => None
   }
 }

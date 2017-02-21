@@ -25,7 +25,7 @@ private[http] trait SecuredAccessSupport {
 
   def privateResourceAccess(ctx: TokenContext, username: String)(inner: Route)(implicit apiCtx: ApiContext): Route = {
     apiCtx.findUserByName(username) match {
-      case Some(User(Some(id), _, _)) if id.equals(ctx.userId) => inner
+      case Some(User(id, _, _)) if id.equals(ctx.userId) => inner
       case _                                                   => complete(StatusCodes.NotAcceptable)
     }
   }

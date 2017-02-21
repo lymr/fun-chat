@@ -1,6 +1,8 @@
 package core.db.clients
 
 import base.TestSuite
+import core.db.clients.ConnectedClientsStoreSuite._
+import core.entities.UserID
 import org.mockito.Mock
 import restapi.http.entities.ClientInformation
 
@@ -21,57 +23,62 @@ class ConnectedClientsStoreSuite extends TestSuite {
   }
 
   test("client information is present, user is online") {
-    connectedClientsStore.update("user-id-x1", mockClientInfo1)
+    connectedClientsStore.update(USER_ID_1, mockClientInfo1)
 
-    val result = connectedClientsStore.isOnline("user-id-x1")
+    val result = connectedClientsStore.isOnline(USER_ID_1)
 
     assert(result)
   }
 
   test("client information is absent, user is online") {
-    val result = connectedClientsStore.isOnline("user-id-x1")
+    val result = connectedClientsStore.isOnline(USER_ID_1)
 
     assert(!result)
   }
 
   test("adding two clients, searching for first, found") {
-    connectedClientsStore.update("user-id-x1", mockClientInfo1)
-    connectedClientsStore.update("user-id-x2", mockClientInfo2)
+    connectedClientsStore.update(USER_ID_1, mockClientInfo1)
+    connectedClientsStore.update(USER_ID_2, mockClientInfo2)
 
-    val result = connectedClientsStore.find("user-id-x1")
+    val result = connectedClientsStore.find(USER_ID_1)
 
     assert(result.isDefined)
     assertResult(mockClientInfo1)(result.get)
   }
 
   test("adding two clients, removing first, searching for first, absent") {
-    connectedClientsStore.update("user-id-x1", mockClientInfo1)
-    connectedClientsStore.update("user-id-x2", mockClientInfo2)
-    connectedClientsStore.remove("user-id-x1")
+    connectedClientsStore.update(USER_ID_1, mockClientInfo1)
+    connectedClientsStore.update(USER_ID_2, mockClientInfo2)
+    connectedClientsStore.remove(USER_ID_1)
 
-    val result = connectedClientsStore.find("user-id-x1")
+    val result = connectedClientsStore.find(USER_ID_1)
 
     assert(result.isEmpty)
   }
 
   test("adding two clients, removing first, searching for second, found") {
-    connectedClientsStore.update("user-id-x1", mockClientInfo1)
-    connectedClientsStore.update("user-id-x2", mockClientInfo2)
-    connectedClientsStore.remove("user-id-x1")
+    connectedClientsStore.update(USER_ID_1, mockClientInfo1)
+    connectedClientsStore.update(USER_ID_2, mockClientInfo2)
+    connectedClientsStore.remove(USER_ID_1)
 
-    val result = connectedClientsStore.find("user-id-x2")
+    val result = connectedClientsStore.find(USER_ID_2)
 
     assert(result.isDefined)
     assertResult(mockClientInfo2)(result.get)
   }
 
   test("updating existing client info, newer is saved") {
-    connectedClientsStore.update("user-id-x1", mockClientInfo1)
-    connectedClientsStore.update("user-id-x1", mockClientInfo2)
+    connectedClientsStore.update(USER_ID_1, mockClientInfo1)
+    connectedClientsStore.update(USER_ID_1, mockClientInfo2)
 
-    val result = connectedClientsStore.find("user-id-x1")
+    val result = connectedClientsStore.find(USER_ID_1)
 
     assert(result.isDefined)
     assertResult(mockClientInfo2)(result.get)
   }
+}
+
+object ConnectedClientsStoreSuite {
+  private val USER_ID_1 = UserID("user-id-x1")
+  private val USER_ID_2 = UserID("user-id-x2")
 }

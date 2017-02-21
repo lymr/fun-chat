@@ -1,7 +1,6 @@
 package core.db.users
 
-import core.entities.User
-import core.entities.Defines.UserID
+import core.entities.{User, UserID}
 import org.joda.time.DateTime
 import scalikejdbc._
 
@@ -13,7 +12,7 @@ trait UsersDao {
 
   def findUserByName(name: String)(implicit session: DBSession = AutoSession): Option[User]
 
-  def findUserByID(userId: String)(implicit session: DBSession = AutoSession): Option[User]
+  def findUserByID(userId: UserID)(implicit session: DBSession = AutoSession): Option[User]
 
   def updateUser(userId: UserID, name: String, password: String)(implicit session: DBSession = AutoSession): User
 

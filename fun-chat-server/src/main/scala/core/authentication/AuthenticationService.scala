@@ -4,7 +4,7 @@ import akka.Done
 import core.db.clients.ConnectedClientsStore
 import core.db.users.UsersDao
 import core.entities.Defines._
-import core.entities.TokenContext
+import core.entities.{TokenContext, UserID}
 import restapi.http.entities.ClientInformation
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -14,10 +14,9 @@ class AuthenticationService(authenticator: UserAuthenticator, dao: UsersDao, con
 
   def signIn(username: String, password: UserSecret, info: ClientInformation): Future[Option[AuthToken]] = Future {
     val tuple = for {
-      user   <- dao.findUserByName(username)
-      token  <- authenticator.authenticate(user, password)
-      userId <- user.userId
-    } yield (userId, token)
+      user  <- dao.findUserByName(username)
+      token <- authenticator.authenticate(user, password)
+    } yield (user.userId, token)
 
     tuple.map {
       case (userId, token) => connectedClients.update(userId, info); token
@@ -29,7 +28,7 @@ class AuthenticationService(authenticator: UserAuthenticator, dao: UsersDao, con
       (unm, pss) => {
         val user  = dao.createUser(unm, pss)
         val token = authenticator.authenticate(user, password)
-        user.userId.foreach(connectedClients.update(_, info))
+        connectedClients.update(user.userId, info)
         token
       }
 

@@ -11,8 +11,7 @@ class UserAuthenticator(secretValidator: (CredentialSet, String) => Boolean,
 
   def authenticate(user: User, password: UserSecret): Option[AuthToken] = {
     for {
-      id    <- user.userId
-      creds <- credentialsDao.findUserCredentials(id)
+      creds <- credentialsDao.findUserCredentials(user.userId)
       token <- if (secretValidator(creds, password)) tokenGenerator.create(TokenContext.fromUser(user)) else None
     } yield token
   }

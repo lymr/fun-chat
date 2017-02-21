@@ -5,7 +5,6 @@ package core.entities
   * Note: Don't try this on production!
   */
 object Defines {
-  type UserID     = String
   type UserSecret = String
   type AuthToken  = String
 }

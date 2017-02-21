@@ -3,11 +3,11 @@ package core.db.users
 import java.util.UUID
 
 import core.db.PostgreSQLExtensions
-import core.entities.CredentialSet
-import core.entities.Defines.{UserID, UserSecret}
+import core.entities.Defines.UserSecret
+import core.entities.{CredentialSet, UserID}
 import scalikejdbc._
 
-case class CredentialsDaoEntity(userId: UserID, password: Array[Byte], salt: Array[Byte], algorithm: String)
+case class CredentialsDaoEntity(userId: String, password: Array[Byte], salt: Array[Byte], algorithm: String)
 
 object CredentialsDaoEntity extends SQLSyntaxSupport[CredentialsDaoEntity] {
   override def tableName: String = "user_credentials"
@@ -25,7 +25,7 @@ class SqlUserCredentialsDao(credentialsGenerator: (Array[Char]) => Option[Creden
   val c = CredentialsDaoEntity.syntax("uc")
 
   override def findUserCredentials(userId: UserID)(implicit session: DBSession): Option[CredentialSet] = {
-    val id = UUID.fromString(userId)
+    val id = UUID.fromString(userId.id)
     withSQL {
       select(c.result.*).from(CredentialsDaoEntity as c).where.eq(c.userId, id)
     }.map(CredentialsDaoEntity(c)).single().apply().map(toCredentialSet)
@@ -35,7 +35,7 @@ class SqlUserCredentialsDao(credentialsGenerator: (Array[Char]) => Option[Creden
     val credentials = credentialsGenerator(password.toCharArray)
       .getOrElse(throw new RuntimeException("Failed to generate credential."))
 
-    val id  = UUID.fromString(userId)
+    val id  = UUID.fromString(userId.id)
     val ucc = CredentialsDaoEntity.column
     withSQL {
       insert
@@ -51,7 +51,7 @@ class SqlUserCredentialsDao(credentialsGenerator: (Array[Char]) => Option[Creden
     val credentials = credentialsGenerator(password.toCharArray)
       .getOrElse(throw new RuntimeException("Failed to generate credential."))
 
-    val id  = UUID.fromString(userId)
+    val id  = UUID.fromString(userId.id)
     val ucc = CredentialsDaoEntity.column
     withSQL {
       update(CredentialsDaoEntity)

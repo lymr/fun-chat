@@ -2,8 +2,7 @@ package messages
 
 import akka.actor.{Actor, ActorRef, Props}
 import akka.stream.ActorMaterializer
-import core.entities.Defines.UserID
-import core.entities.User
+import core.entities.{User, UserID}
 import messages.MessageProcessor._
 import messages.entities._
 import restapi.http.entities.ClientInformation
@@ -25,8 +24,7 @@ class MessageProcessor(ctx: MessageProcessorContext)(implicit materializer: Acto
   def processUserMessage(userMsg: ForwardUserMessage): Unit = {
     val maybeMessage = for {
       recipientUser   <- ctx.findRecipientByName(userMsg.recipientName)
-      recipientUserId <- recipientUser.userId
-      recipientInfo   <- ctx.findRecipientInfo(recipientUserId)
+      recipientInfo   <- ctx.findRecipientInfo(recipientUser.userId)
       message <- Some(
         TextMessage(userMsg.message.content,
                     userMsg.senderCtx.username,

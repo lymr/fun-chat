@@ -1,6 +1,6 @@
 package core.db.clients
 
-import core.entities.Defines.UserID
+import core.entities.UserID
 import restapi.http.entities.ClientInformation
 
 import scala.collection.mutable

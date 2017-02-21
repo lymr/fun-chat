@@ -1,7 +1,6 @@
 package restapi.http
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import core.entities.Defines._
 import core.entities._
 import org.joda.time.DateTime
 import restapi.http.entities._
@@ -12,13 +11,14 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val messageEntityFormat         = jsonFormat2(MessageEntity)
   implicit val userCredentialsEntityFormat = jsonFormat2(UserCredentialsEntity)
   implicit val clientInformationFormat     = jsonFormat2(ClientInformation)
+  implicit val userIdFormat                = jsonFormat1(UserID)
 
   implicit object UserJsonFormat extends RootJsonFormat[User] {
     override def read(json: JsValue): User = json match {
       case jsObject: JsObject =>
         jsObject.getFields("userId", "name", "lastSeen") match {
           case Seq(userId, JsString(name), JsNumber(lastSeen)) =>
-            User(userId.convertTo[Option[UserID]], name, new DateTime(lastSeen.toLong))
+            User(userId.convertTo[UserID], name, new DateTime(lastSeen.toLong))
         }
       case _ => deserializationError("An error occurred while serializing User entity.")
     }
