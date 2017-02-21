@@ -35,7 +35,7 @@ class JwtBearerTokenGenerator(keyGenerator: () => Array[Byte], timer: Timer)
   }
 
   def decode(token: AuthToken): Option[TokenContext] = {
-    verify(token).collect {
+    verify(token).map {
       case (jwt: DecodedJWT) => Seq(jwt.getClaim("uid").asString, jwt.getClaim("unm").asString)
     }.map {
       case Seq(id: String, username: String) => TokenContext(id, username)
