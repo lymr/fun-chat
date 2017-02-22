@@ -1,6 +1,6 @@
 package messages.entities
 
-import core.entities.TokenContext
+import core.entities.AuthTokenContext
 import restapi.http.entities.MessageEntity
 
-case class ForwardUserMessage(message: MessageEntity, recipientName: String, senderCtx: TokenContext)
+case class ForwardUserMessage(message: MessageEntity, recipientName: String, senderCtx: AuthTokenContext)

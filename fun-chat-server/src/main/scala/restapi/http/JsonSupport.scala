@@ -45,4 +45,14 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
       "lastSeen" -> JsNumber(obj.lastSeen.getMillis)
     )
   }
+
+  implicit object AuthTokenFormat extends RootJsonFormat[AuthToken] {
+    override def read(json: JsValue): AuthToken =
+      deserializationError("Operation not supported.")
+
+    override def write(obj: AuthToken): JsValue = obj match {
+      case BearerToken(bearer) => JsString(bearer)
+      case _=> deserializationError("Unsupported AuthToken.")
+    }
+  }
 }

@@ -6,8 +6,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import base.TestSpec
 import core.authentication.tokenGenerators.JwtBearerTokenGenerator
 import core.db.users.UsersDao
-import core.entities.Defines.AuthToken
-import core.entities.{Timer, TokenContext, User, UserID}
+import core.entities._
 import org.joda.time.DateTime
 import org.mockito.Mock
 import restapi.http.JsonSupport
@@ -22,8 +21,7 @@ class UserRouteSpec extends TestSpec with ScalatestRouteTest with JsonSupport {
   @Mock
   private var mockUsersDao: UsersDao = _
 
-  implicit private var mockApiContext: ApiContext =
-    new ApiContext((token) => Future.successful(BEARER_TOKEN_GENERATOR.decode(token)), (name) => userByName(name))
+  implicit private var mockApiContext: ApiContext = new ApiContext(authenticate, userByName)
 
   private var userRoute: UsersRoute = _
 
@@ -97,12 +95,17 @@ private object UserRouteSpec {
   val USERS = Seq(User(USER_ID_1, USER_1, DateTime.now), User(USER_ID_2, USER_2, DateTime.now))
 
   val BEARER_TOKEN_GENERATOR = new JwtBearerTokenGenerator(() => "test-secret".toCharArray.map(_.toByte), Timer(180))
-  val TOKEN_1: AuthToken     = BEARER_TOKEN_GENERATOR.create(TokenContext(USER_ID_1, USER_1)).get
-  val TOKEN_2: AuthToken     = BEARER_TOKEN_GENERATOR.create(TokenContext(USER_ID_2, USER_2)).get
+  val TOKEN_1: String        = BEARER_TOKEN_GENERATOR.create(AuthTokenContext(USER_ID_1, USER_1)).get.token
+  val TOKEN_2: String        = BEARER_TOKEN_GENERATOR.create(AuthTokenContext(USER_ID_2, USER_2)).get.token
 
   val userByName: (String) => Option[User] = {
     case USER_1 => Some(User(USER_ID_1, USER_1, DateTime.now))
     case USER_2 => Some(User(USER_ID_2, USER_2, DateTime.now))
     case _      => None
+  }
+
+  val authenticate: AuthToken => Future[Option[AuthTokenContext]] = {
+    case (bearer: BearerToken) => Future.successful(BEARER_TOKEN_GENERATOR.decode(bearer))
+    case _                     => Future.failed(new IllegalArgumentException("Unsupported AuthToken."))
   }
 }

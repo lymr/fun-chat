@@ -4,7 +4,7 @@ import akka.Done
 import core.db.clients.ConnectedClientsStore
 import core.db.users.UsersDao
 import core.entities.Defines._
-import core.entities.{TokenContext, UserID}
+import core.entities.{AuthToken, AuthTokenContext, UserID}
 import restapi.http.entities.ClientInformation
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -43,9 +43,9 @@ class AuthenticationService(authenticator: UserAuthenticator, dao: UsersDao, con
     Done
   }
 
-  def authorize(token: AuthToken): Future[Option[TokenContext]] = Future {
+  def authorize(token: AuthToken): Future[Option[AuthTokenContext]] = Future {
     authenticator.validateToken(token).filter {
-      case TokenContext(id, _) => connectedClients.isOnline(id)
+      case AuthTokenContext(id, _) => connectedClients.isOnline(id)
     }
   }
 

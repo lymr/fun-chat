@@ -4,8 +4,7 @@ import com.auth0.jwt._
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.DecodedJWT
 import com.typesafe.scalalogging.StrictLogging
-import core.entities.Defines.AuthToken
-import core.entities.{Timer, TokenContext, UserID}
+import core.entities.{AuthTokenContext, BearerToken, Timer, UserID}
 import restapi.http.JsonSupport
 import spray.json._
 
@@ -16,7 +15,7 @@ class JwtBearerTokenGenerator(keyGenerator: () => Array[Byte], timer: Timer)
 
   private val secretKey = keyGenerator()
 
-  def create(ctx: TokenContext): Option[AuthToken] = {
+  def create(ctx: AuthTokenContext): Option[BearerToken] = {
     val triedToken = Try {
       val timestamp = timer.freeze
       JWT
@@ -31,31 +30,31 @@ class JwtBearerTokenGenerator(keyGenerator: () => Array[Byte], timer: Timer)
     }
 
     triedToken match {
-      case Success(token) => Some(token)
+      case Success(token) => Some(BearerToken(token))
       case Failure(ex)    => logger.error("Failed to generate token!", ex); None
     }
   }
 
-  def decode(token: AuthToken): Option[TokenContext] = {
-    verify(token).map {
+  def decode(bearer: BearerToken): Option[AuthTokenContext] = {
+    verify(bearer).map {
       case (jwt: DecodedJWT) => Seq(jwt.getClaim("uid").asString, jwt.getClaim("unm").asString)
     }.map {
-      case Seq(jsId: String, username: String) => TokenContext(jsId.parseJson.convertTo[UserID], username)
+      case Seq(jsId: String, username: String) => AuthTokenContext(jsId.parseJson.convertTo[UserID], username)
     }
   }
 
-  def touch(token: AuthToken): Option[AuthToken] = {
-    decode(token) match {
+  def touch(bearer: BearerToken): Option[BearerToken] = {
+    decode(bearer) match {
       case Some(user) => create(user)
       case _          => None
     }
   }
 
-  def isValid(token: AuthToken): Boolean = {
-    verify(token).isDefined
+  def isValid(bearer: BearerToken): Boolean = {
+    verify(bearer).isDefined
   }
 
-  private def verify(token: AuthToken): Option[DecodedJWT] = {
+  private def verify(bearer: BearerToken): Option[DecodedJWT] = {
     val triedVerify = Try {
 
       val verifier = JWT
@@ -66,7 +65,7 @@ class JwtBearerTokenGenerator(keyGenerator: () => Array[Byte], timer: Timer)
         .acceptExpiresAt(timer.intervalStep)
         .build()
 
-      verifier.verify(token)
+      verifier.verify(bearer.token)
     }
 
     triedVerify match {
