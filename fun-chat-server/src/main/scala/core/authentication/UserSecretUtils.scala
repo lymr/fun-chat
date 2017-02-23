@@ -9,4 +9,8 @@ object UserSecretUtils {
     val password = secret.password.toCharArray
     SecretKeyHashUtils.generate(password, salt)
   }
+
+  def validate(storedCredentials: CredentialSet, secret: UserSecret): Boolean = {
+    SecretKeyHashUtils.validate(storedCredentials, secret.password)
+  }
 }

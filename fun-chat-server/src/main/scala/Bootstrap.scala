@@ -27,7 +27,7 @@ class Bootstrap {
     flywayService.migrateDatabaseSchema()
 
     val bearerTokenGenerator = new JwtBearerTokenGenerator(SecuredTokenGenerator.generate, Timer(config.tokenExpiration))
-    val userAuthenticator    = new UserAuthenticator(SecretKeyHashUtils.validate, bearerTokenGenerator, dbc.credentialsDao)
+    val userAuthenticator    = new UserAuthenticator(UserSecretUtils.validate, bearerTokenGenerator, dbc.credentialsDao)
     val connectedClients     = new ConnectedClientsStore()
 
     val msgProcCtx     = MessageProcessorContext(dbc.usersDao.findUserByName, connectedClients.find)

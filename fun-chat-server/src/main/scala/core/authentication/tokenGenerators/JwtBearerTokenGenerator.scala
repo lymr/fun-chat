@@ -4,16 +4,16 @@ import com.auth0.jwt._
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.DecodedJWT
 import com.typesafe.scalalogging.StrictLogging
-import core.entities.{AuthTokenContext, BearerToken, Timer, UserID}
+import core.entities._
 import restapi.http.JsonSupport
 import spray.json._
 
 import scala.util.{Failure, Success, Try}
 
-class JwtBearerTokenGenerator(keyGenerator: () => Array[Byte], timer: Timer)
+class JwtBearerTokenGenerator(keyGenerator: () => SecuredToken, timer: Timer)
     extends BearerTokenGenerator with JsonSupport with StrictLogging {
 
-  private val secretKey = keyGenerator()
+  private val secretKey = keyGenerator().token
 
   def create(ctx: AuthTokenContext): Option[BearerToken] = {
     val triedToken = Try {
