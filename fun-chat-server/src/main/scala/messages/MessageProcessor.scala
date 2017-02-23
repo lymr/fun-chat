@@ -23,8 +23,8 @@ class MessageProcessor(ctx: MessageProcessorContext)(implicit materializer: Acto
 
   def processUserMessage(userMsg: ForwardUserMessage): Unit = {
     val maybeMessage = for {
-      recipientUser   <- ctx.findRecipientByName(userMsg.recipientName)
-      recipientInfo   <- ctx.findRecipientInfo(recipientUser.userId)
+      recipientUser <- ctx.findRecipientByName(userMsg.recipientName)
+      recipientInfo <- ctx.findRecipientInfo(recipientUser.userId)
       message <- Some(
         TextMessage(userMsg.message.content,
                     userMsg.senderCtx.username,
@@ -42,8 +42,8 @@ class MessageProcessor(ctx: MessageProcessorContext)(implicit materializer: Acto
 
 object MessageProcessor {
 
-  case class MessageProcessorContext(findRecipientByName: (String) => Option[User],
-                                     findRecipientInfo: (UserID) => Option[ClientInformation])
+  case class MessageProcessorContext(findRecipientByName: String => Option[User],
+                                     findRecipientInfo: UserID => Option[ClientInformation])
 
   def props(ctx: MessageProcessorContext)(implicit materializer: ActorMaterializer): Props =
     Props(new MessageProcessor(ctx))

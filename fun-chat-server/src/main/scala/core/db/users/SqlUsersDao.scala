@@ -3,8 +3,7 @@ package core.db.users
 import java.util.UUID
 
 import core.db.PostgreSQLExtensions
-import core.entities.Defines._
-import core.entities.{User, UserID}
+import core.entities.{User, UserID, UserSecret}
 import org.joda.time.DateTime
 import scalikejdbc._
 
@@ -24,7 +23,7 @@ class SqlUsersDao(createCredentialsOp: (UserID, UserSecret) => Unit, updateCrede
 
   val u = UserDaoEntity.syntax("u")
 
-  override def createUser(name: String, password: String)(implicit session: DBSession): User = {
+  override def createUser(name: String, password: UserSecret)(implicit session: DBSession): User = {
     val id: UUID              = UUID.randomUUID()
     val currentTime: DateTime = DateTime.now
     val uc                    = UserDaoEntity.column
@@ -56,7 +55,7 @@ class SqlUsersDao(createCredentialsOp: (UserID, UserSecret) => Unit, updateCrede
     }.map(UserDaoEntity(u)).single().apply().map(toUser)
   }
 
-  override def updateUser(userId: UserID, name: String, password: String)(implicit session: DBSession): User = {
+  override def updateUser(userId: UserID, name: String, secret: UserSecret)(implicit session: DBSession): User = {
     val id: UUID = UUID.fromString(userId.id)
     val currentTime: DateTime = DateTime.now
     val uc       = UserDaoEntity.column
@@ -64,7 +63,7 @@ class SqlUsersDao(createCredentialsOp: (UserID, UserSecret) => Unit, updateCrede
       update(UserDaoEntity).set(uc.userName -> name, uc.lastSeen -> currentTime).where.eq(uc.userId, id)
     }.update().apply()
 
-    updateCredentialsOp(userId, password)
+    updateCredentialsOp(userId, secret)
     User(userId, name, currentTime)
   }
 

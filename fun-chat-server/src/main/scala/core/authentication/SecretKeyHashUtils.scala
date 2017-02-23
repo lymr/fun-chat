@@ -17,8 +17,8 @@ object SecretKeyHashUtils extends StrictLogging {
   private val ITERATIONS: Int        = 20
   private val SECRET_KEY_LENGTH: Int = 512
 
-  def validate(storedCredentials: CredentialSet, password: String): Boolean = {
-    val given = calculateHash(password.toCharArray, storedCredentials.salt)
+  def validate(storedCredentials: CredentialSet, secret: String): Boolean = {
+    val given = calculateHash(secret.toCharArray, storedCredentials.salt)
     given match {
       case Some(givenPassword) => storedCredentials.password.sameElements(givenPassword)
       case None                => false

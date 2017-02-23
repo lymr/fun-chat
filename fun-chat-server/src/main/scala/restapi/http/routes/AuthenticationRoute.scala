@@ -4,6 +4,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.{Directives, Route}
 import core.authentication.AuthenticationService
+import core.entities.UserSecret
 import restapi.http.JsonSupport
 import restapi.http.entities.UserCredentialsEntity
 import restapi.http.routes.support._
@@ -20,7 +21,7 @@ class AuthenticationRoute(authService: AuthenticationService)(implicit ec: Execu
           extractClientInfo { clientInfo =>
             extractCredentials {
               case Some(BasicHttpCredentials(username, password)) =>
-                complete(authService.signIn(username, password, clientInfo))
+                complete(authService.signIn(username, UserSecret(password), clientInfo))
               case _ => complete(StatusCodes.Unauthorized)
             }
           }
@@ -33,7 +34,7 @@ class AuthenticationRoute(authService: AuthenticationService)(implicit ec: Execu
             extractClientInfo { clientInfo =>
               extractCredentials {
                 case Some(BasicHttpCredentials(username, password)) =>
-                  complete(authService.signUp(username, password, clientInfo))
+                  complete(authService.signUp(username, UserSecret(password), clientInfo))
                 case _ => complete(StatusCodes.Unauthorized)
               }
             }
@@ -55,7 +56,7 @@ class AuthenticationRoute(authService: AuthenticationService)(implicit ec: Execu
         securedAccess { ctx =>
           patch {
             entity(as[UserCredentialsEntity]) { credentials =>
-              complete(authService.updateCredentials(ctx.userId, credentials.username, credentials.password))
+              complete(authService.updateCredentials(ctx.userId, credentials.username, UserSecret(credentials.password)))
             }
           }
         }

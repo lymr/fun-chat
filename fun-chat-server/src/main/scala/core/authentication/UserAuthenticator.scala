@@ -2,17 +2,16 @@ package core.authentication
 
 import core.authentication.tokenGenerators.BearerTokenGenerator
 import core.db.users.UserCredentialsDao
-import core.entities.Defines._
 import core.entities._
 
-class UserAuthenticator(secretValidator: (CredentialSet, String) => Boolean,
+class UserAuthenticator(secretValidator: (CredentialSet, UserSecret) => Boolean,
                         tokenGenerator: BearerTokenGenerator,
                         credentialsDao: UserCredentialsDao) {
 
-  def authenticate(user: User, password: UserSecret): Option[AuthToken] = {
+  def authenticate(user: User, secret: UserSecret): Option[AuthToken] = {
     for {
       creds <- credentialsDao.findUserCredentials(user.userId)
-      token <- if (secretValidator(creds, password)) tokenGenerator.create(AuthTokenContext.fromUser(user)) else None
+      token <- if (secretValidator(creds, secret)) tokenGenerator.create(AuthTokenContext.fromUser(user)) else None
     } yield token
   }
 

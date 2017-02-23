@@ -1,12 +1,12 @@
 package core.db.users
 
-import core.entities.{User, UserID}
+import core.entities.{User, UserID, UserSecret}
 import org.joda.time.DateTime
 import scalikejdbc._
 
 trait UsersDao {
 
-  def createUser(name: String, password: String)(implicit session: DBSession = AutoSession): User
+  def createUser(name: String, secret: UserSecret)(implicit session: DBSession = AutoSession): User
 
   def findUsers()(implicit session: DBSession = AutoSession): Seq[User]
 
@@ -14,7 +14,7 @@ trait UsersDao {
 
   def findUserByID(userId: UserID)(implicit session: DBSession = AutoSession): Option[User]
 
-  def updateUser(userId: UserID, name: String, password: String)(implicit session: DBSession = AutoSession): User
+  def updateUser(userId: UserID, name: String, secret: UserSecret)(implicit session: DBSession = AutoSession): User
 
   def updateUserLastSeen(userId: UserID, timestamp: DateTime)(implicit session: DBSession = AutoSession): Unit
 

@@ -60,7 +60,7 @@ class AuthenticationRouteSpec extends TestSpec with ScalatestRouteTest with Json
   "sign in with basic credentials, with client information, request pass" in {
     val entity = HttpEntity(ContentTypes.`application/json`, CLIENT_INFO.toJson.toString)
     Post("/auth/signIn", entity) ~> addHeader(Authorization(BasicHttpCredentials(USERNAME, PASSWORD))) ~> authRoute.route ~> check {
-      verify(mockAuthService, times(1)).signIn(USERNAME, PASSWORD, CLIENT_INFO)
+      verify(mockAuthService, times(1)).signIn(USERNAME, SECRET, CLIENT_INFO)
     }
   }
 
@@ -80,7 +80,7 @@ class AuthenticationRouteSpec extends TestSpec with ScalatestRouteTest with Json
   "sign up with basic credentials, with client information, request pass" in {
     val entity = HttpEntity(ContentTypes.`application/json`, CLIENT_INFO.toJson.toString)
     Post("/auth/signUp", entity) ~> addHeader(Authorization(BasicHttpCredentials(USERNAME, PASSWORD))) ~> authRoute.route ~> check {
-      verify(mockAuthService, times(1)).signUp(USERNAME, PASSWORD, CLIENT_INFO)
+      verify(mockAuthService, times(1)).signUp(USERNAME, SECRET, CLIENT_INFO)
     }
   }
 
@@ -124,7 +124,7 @@ class AuthenticationRouteSpec extends TestSpec with ScalatestRouteTest with Json
   "update credentials with valid token, request is processed" in {
     val entity = HttpEntity(ContentTypes.`application/json`, CREDENTIALS_ENTITY.toJson.toString)
     Patch("/credentials", entity) ~> addHeader(Authorization(OAuth2BearerToken(TOKEN))) ~> authRoute.route ~> check {
-      verify(mockAuthService, times(1)).updateCredentials(eq(USER_ID), eq(USERNAME), eq(NEW_PASSWORD))
+      verify(mockAuthService, times(1)).updateCredentials(eq(USER_ID), eq(USERNAME), eq(NEW_SECRET))
     }
   }
 }
@@ -133,10 +133,11 @@ private object AuthenticationRouteSpec {
   val USER_ID      = UserID("user-id-1")
   val USERNAME     = "username-1"
   val PASSWORD     = "p@ssword"
-  val NEW_PASSWORD = "p@sswo7d"
+  val SECRET     = UserSecret(PASSWORD)
+  val NEW_SECRET = UserSecret("p@sswo7d")
 
   val CLIENT_INFO            = ClientInformation("v1.0", "10.1.1.138")
-  val CREDENTIALS_ENTITY     = UserCredentialsEntity(USERNAME, NEW_PASSWORD)
+  val CREDENTIALS_ENTITY     = UserCredentialsEntity(USERNAME, NEW_SECRET.password)
   val BEARER_TOKEN_GENERATOR = new JwtBearerTokenGenerator(() => "test-secret".toCharArray.map(_.toByte), Timer(180))
   val TOKEN: String          = BEARER_TOKEN_GENERATOR.create(AuthTokenContext(USER_ID, USERNAME)).get.token
 

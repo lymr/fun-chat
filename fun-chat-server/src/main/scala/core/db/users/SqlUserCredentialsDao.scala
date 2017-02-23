@@ -3,8 +3,7 @@ package core.db.users
 import java.util.UUID
 
 import core.db.PostgreSQLExtensions
-import core.entities.Defines.UserSecret
-import core.entities.{CredentialSet, UserID}
+import core.entities.{CredentialSet, UserID, UserSecret}
 import scalikejdbc._
 
 case class CredentialsDaoEntity(userId: String, password: Array[Byte], salt: Array[Byte], algorithm: String)
@@ -19,7 +18,7 @@ object CredentialsDaoEntity extends SQLSyntaxSupport[CredentialsDaoEntity] {
     CredentialsDaoEntity(rs.string(uc.userId), rs.bytes(uc.password), rs.bytes(uc.salt), rs.string(uc.algorithm))
 }
 
-class SqlUserCredentialsDao(credentialsGenerator: (Array[Char]) => Option[CredentialSet])
+class SqlUserCredentialsDao(credentialsGenerator: UserSecret => Option[CredentialSet])
     extends UserCredentialsDao with PostgreSQLExtensions {
 
   val c = CredentialsDaoEntity.syntax("uc")
@@ -31,8 +30,8 @@ class SqlUserCredentialsDao(credentialsGenerator: (Array[Char]) => Option[Creden
     }.map(CredentialsDaoEntity(c)).single().apply().map(toCredentialSet)
   }
 
-  override def createUserCredentials(userId: UserID, password: UserSecret)(implicit session: DBSession): Unit = {
-    val credentials = credentialsGenerator(password.toCharArray)
+  override def createUserCredentials(userId: UserID, secret: UserSecret)(implicit session: DBSession): Unit = {
+    val credentials = credentialsGenerator(secret)
       .getOrElse(throw new RuntimeException("Failed to generate credential."))
 
     val id  = UUID.fromString(userId.id)
@@ -47,8 +46,8 @@ class SqlUserCredentialsDao(credentialsGenerator: (Array[Char]) => Option[Creden
     }.update().apply()
   }
 
-  override def updateUserCredentials(userId: UserID, password: UserSecret)(implicit session: DBSession): Unit = {
-    val credentials = credentialsGenerator(password.toCharArray)
+  override def updateUserCredentials(userId: UserID, secret: UserSecret)(implicit session: DBSession): Unit = {
+    val credentials = credentialsGenerator(secret)
       .getOrElse(throw new RuntimeException("Failed to generate credential."))
 
     val id  = UUID.fromString(userId.id)
