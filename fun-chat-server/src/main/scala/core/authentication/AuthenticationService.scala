@@ -3,7 +3,7 @@ package core.authentication
 import akka.Done
 import core.db.clients.ConnectedClientsStore
 import core.db.users.UsersDao
-import core.entities.{AuthToken, AuthTokenContext, UserID, UserSecret}
+import core.entities._
 import restapi.http.entities.ClientInformation
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -48,16 +48,16 @@ class AuthenticationService(authenticator: UserAuthenticator, dao: UsersDao, con
     }
   }
 
-  def updateCredentials(userId: UserID, username: String, secret: UserSecret): Future[Option[AuthToken]] = Future {
-    val updateUser: (UserID, String, UserSecret) => Option[AuthToken] =
-      (uid, unm, pss) => {
-        val user = dao.updateUser(uid, unm, pss)
+  def updateCredentials(userId: UserID, newSecret: UserSecret): Future[Option[AuthToken]] = Future {
+    val updateUser: (User, UserSecret) => Option[AuthToken] =
+      (user, secret) => {
+        dao.updateUser(user.userId, secret)
         authenticator.authenticate(user, secret)
       }
 
     dao.findUserByID(userId) match {
-      case Some(_) => updateUser(userId, username, secret)
-      case None    => None
+      case Some(user) => updateUser(user, newSecret)
+      case None       => None
     }
   }
 }

@@ -1,3 +1,5 @@
 package messages.entities
 
-case class DeliverMessage(msg: TextMessage)
+abstract class DeliverMessage
+
+case class DeliverTextMessage(message: ProcessedTextMessage) extends DeliverMessage

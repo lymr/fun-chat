@@ -55,16 +55,15 @@ class SqlUsersDao(createCredentialsOp: (UserID, UserSecret) => Unit, updateCrede
     }.map(UserDaoEntity(u)).single().apply().map(toUser)
   }
 
-  override def updateUser(userId: UserID, name: String, secret: UserSecret)(implicit session: DBSession): User = {
+  override def updateUser(userId: UserID, secret: UserSecret)(implicit session: DBSession): Unit = {
     val id: UUID = UUID.fromString(userId.id)
     val currentTime: DateTime = DateTime.now
     val uc       = UserDaoEntity.column
     withSQL {
-      update(UserDaoEntity).set(uc.userName -> name, uc.lastSeen -> currentTime).where.eq(uc.userId, id)
+      update(UserDaoEntity).set(uc.lastSeen -> currentTime).where.eq(uc.userId, id)
     }.update().apply()
 
     updateCredentialsOp(userId, secret)
-    User(userId, name, currentTime)
   }
 
   override def updateUserLastSeen(userId: UserID, timestamp: DateTime)(implicit session: DBSession): Unit = {

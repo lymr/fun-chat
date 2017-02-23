@@ -11,7 +11,7 @@ import core.entities._
 import org.joda.time.DateTime
 import org.mockito.Mock
 import restapi.http.JsonSupport
-import restapi.http.entities.{ClientInformation, UserCredentialsEntity}
+import restapi.http.entities.ClientInformation
 import restapi.http.routes.AuthenticationRouteSpec._
 import spray.json._
 
@@ -122,9 +122,9 @@ class AuthenticationRouteSpec extends TestSpec with ScalatestRouteTest with Json
   }
 
   "update credentials with valid token, request is processed" in {
-    val entity = HttpEntity(ContentTypes.`application/json`, CREDENTIALS_ENTITY.toJson.toString)
+    val entity = HttpEntity(ContentTypes.`application/json`, NEW_PASSWORD)
     Patch("/credentials", entity) ~> addHeader(Authorization(OAuth2BearerToken(TOKEN))) ~> authRoute.route ~> check {
-      verify(mockAuthService, times(1)).updateCredentials(eq(USER_ID), eq(USERNAME), eq(NEW_SECRET))
+      verify(mockAuthService, times(1)).updateCredentials(eq(USER_ID), eq(NEW_SECRET))
     }
   }
 }
@@ -133,13 +133,16 @@ private object AuthenticationRouteSpec {
   val USER_ID      = UserID("user-id-1")
   val USERNAME     = "username-1"
   val PASSWORD     = "p@ssword"
-  val SECRET     = UserSecret(PASSWORD)
-  val NEW_SECRET = UserSecret("p@sswo7d")
+  val NEW_PASSWORD = "p@sswo7d"
+  val SECRET       = UserSecret(PASSWORD)
+  val NEW_SECRET   = UserSecret(NEW_PASSWORD)
 
-  val CLIENT_INFO            = ClientInformation("v1.0", "10.1.1.138")
-  val CREDENTIALS_ENTITY     = UserCredentialsEntity(USERNAME, NEW_SECRET.password)
-  val BEARER_TOKEN_GENERATOR = new JwtBearerTokenGenerator(() => "test-secret".toCharArray.map(_.toByte), Timer(180))
-  val TOKEN: String          = BEARER_TOKEN_GENERATOR.create(AuthTokenContext(USER_ID, USERNAME)).get.token
+  val CLIENT_INFO   = ClientInformation("v1.0", "10.1.1.138")
+  val SECURED_TOKEN = SecuredToken("test-secret".toCharArray.map(_.toByte))
+
+  val BEARER_TOKEN_GENERATOR =
+    new JwtBearerTokenGenerator(() => SECURED_TOKEN, Timer(180))
+  val TOKEN: String = BEARER_TOKEN_GENERATOR.create(AuthTokenContext(USER_ID, USERNAME)).get.token
 
   val userByName: String => Option[User] = {
     case USERNAME => Some(User(USER_ID, USERNAME, DateTime.now))

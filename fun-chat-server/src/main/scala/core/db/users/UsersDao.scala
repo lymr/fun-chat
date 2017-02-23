@@ -14,7 +14,7 @@ trait UsersDao {
 
   def findUserByID(userId: UserID)(implicit session: DBSession = AutoSession): Option[User]
 
-  def updateUser(userId: UserID, name: String, secret: UserSecret)(implicit session: DBSession = AutoSession): User
+  def updateUser(userId: UserID, secret: UserSecret)(implicit session: DBSession = AutoSession): Unit
 
   def updateUserLastSeen(userId: UserID, timestamp: DateTime)(implicit session: DBSession = AutoSession): Unit
 

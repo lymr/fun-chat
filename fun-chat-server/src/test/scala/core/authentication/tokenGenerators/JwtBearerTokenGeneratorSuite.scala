@@ -2,7 +2,7 @@ package core.authentication.tokenGenerators
 
 import base.TestSuite
 import core.authentication.tokenGenerators.JwtBearerTokenGeneratorSuite._
-import core.entities.{IntervalTimestamp, Timer, AuthTokenContext, UserID}
+import core.entities._
 
 class JwtBearerTokenGeneratorSuite extends TestSuite {
 
@@ -71,9 +71,9 @@ class JwtBearerTokenGeneratorSuite extends TestSuite {
 }
 
 object JwtBearerTokenGeneratorSuite {
-  private val USER_ID                 = UserID("user-id-xx")
-  private val USER_NAME: String       = "test-user"
-  private val EXPIRATION: Long        = 120
-  private val TIMER                   = Timer(EXPIRATION)
-  private val SECRET_KEY: Array[Byte] = "^fun-ch@t-test-sec7et-k3y!".toCharArray.map(_.toByte)
+  private val USER_ID           = UserID("user-id-xx")
+  private val USER_NAME: String = "test-user"
+  private val EXPIRATION: Long  = 120
+  private val TIMER             = Timer(EXPIRATION)
+  private val SECRET_KEY        = SecuredToken("^fun-ch@t-test-sec7et-k3y!".toCharArray.map(_.toByte))
 }

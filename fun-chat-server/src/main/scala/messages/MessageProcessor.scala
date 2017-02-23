@@ -10,32 +10,31 @@ import restapi.http.entities.ClientInformation
 class MessageProcessor(ctx: MessageProcessorContext)(implicit materializer: ActorMaterializer) extends Actor {
 
   override def receive: Receive = {
-    case msg: ForwardRawMessage  => processRawMessage(msg)
-    case msg: ForwardUserMessage => processUserMessage(msg)
+    case msg: ForwardRawMessage => processRawMessage(msg)
   }
 
-  private def processRawMessage(rawMsg: ForwardRawMessage): Unit = {
+  private def processRawMessage(rawMessage: ForwardRawMessage): Unit = {
     /* TODO: Parse raw message into one of:
-       1. broadcast message
-       2. multi recipients message
+       1. multi recipients text message
+       2. multimedia message
    */
   }
 
-  def processUserMessage(userMsg: ForwardUserMessage): Unit = {
-    val maybeMessage = for {
-      recipientUser <- ctx.findRecipientByName(userMsg.recipientName)
-      recipientInfo <- ctx.findRecipientInfo(recipientUser.userId)
-      message <- Some(
-        TextMessage(userMsg.message.content,
-                    userMsg.senderCtx.username,
-                    userMsg.recipientName,
-                    recipientInfo,
-                    userMsg.message.timestamp))
-    } yield message
+  private def processTextMessage(message: TextMessage): Unit = {
+    val processedMessages = for {
+      recipientName       <- message.recipients
+      recipientUser       <- ctx.findRecipientByName(recipientName)
+      recipientClientInfo <- ctx.findRecipientInfo(recipientUser.userId)
+      processedMessage = ProcessedTextMessage(message.content,
+                                              message.sender.name,
+                                              recipientName,
+                                              recipientClientInfo,
+                                              message.timestamp)
+    } yield processedMessage
 
-    maybeMessage.foreach { msg =>
+    processedMessages.foreach { msg =>
       val messenger: ActorRef = context.actorOf(Messenger.props())
-      messenger ! DeliverMessage(msg)
+      messenger ! DeliverTextMessage(msg)
     }
   }
 }

@@ -1,22 +1,11 @@
 package messages.entities
 
-import restapi.http.entities.ClientInformation
+import core.entities.User
 
-trait Message {
-  val typeName: String
-
-  val content: String
-  val sender: String
-  val recipientName: String
-  val recipientInfo: ClientInformation
+abstract class Message {
+  val sender: User
+  val recipients: Seq[String]
   val timestamp: Long
 }
 
-case class TextMessage(content: String,
-                       sender: String,
-                       recipientName: String,
-                       recipientInfo: ClientInformation,
-                       timestamp: Long)
-    extends Message {
-  override val typeName: String = "TextMessage"
-}
+case class TextMessage(content: String, sender: User, recipients: Seq[String], timestamp: Long) extends Message

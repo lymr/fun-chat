@@ -6,7 +6,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import base.TestSpec
 import core.authentication.tokenGenerators.JwtBearerTokenGenerator
 import core.db.users.UsersDao
-import core.entities._
+import core.entities.{SecuredToken, _}
 import org.joda.time.DateTime
 import org.mockito.Mock
 import restapi.http.JsonSupport
@@ -92,9 +92,9 @@ private object UserRouteSpec {
   val USER_1    = "user-1"
   val USER_2    = "user-2"
 
-  val USERS = Seq(User(USER_ID_1, USER_1, DateTime.now), User(USER_ID_2, USER_2, DateTime.now))
-
-  val BEARER_TOKEN_GENERATOR = new JwtBearerTokenGenerator(() => "test-secret".toCharArray.map(_.toByte), Timer(180))
+  val USERS                  = Seq(User(USER_ID_1, USER_1, DateTime.now), User(USER_ID_2, USER_2, DateTime.now))
+  val SECURED_TOKEN          = SecuredToken("test-secret".toCharArray.map(_.toByte))
+  val BEARER_TOKEN_GENERATOR = new JwtBearerTokenGenerator(() => SECURED_TOKEN, Timer(180))
   val TOKEN_1: String        = BEARER_TOKEN_GENERATOR.create(AuthTokenContext(USER_ID_1, USER_1)).get.token
   val TOKEN_2: String        = BEARER_TOKEN_GENERATOR.create(AuthTokenContext(USER_ID_2, USER_2)).get.token
 

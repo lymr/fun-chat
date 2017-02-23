@@ -9,7 +9,6 @@ import spray.json._
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
   implicit val messageEntityFormat         = jsonFormat2(MessageEntity)
-  implicit val userCredentialsEntityFormat = jsonFormat2(UserCredentialsEntity)
   implicit val clientInformationFormat     = jsonFormat2(ClientInformation)
   implicit val userIdFormat                = jsonFormat1(UserID)
 
