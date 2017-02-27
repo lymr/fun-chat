@@ -8,6 +8,7 @@ import core.db.{DatabaseContext, FlywayService}
 import core.entities.Timer
 import messages.MessageProcessor
 import messages.MessageProcessor.MessageProcessorContext
+import messages.parser.MessageGenerator
 import restapi.http.HttpService
 import restapi.http.routes.HttpRouter
 import utils.Configuration
@@ -30,8 +31,9 @@ class Bootstrap {
     val userAuthenticator    = new UserAuthenticator(UserSecretUtils.validate, bearerTokenGenerator, dbc.credentialsDao)
     val connectedClients     = new ConnectedClientsStore()
 
-    val msgProcCtx     = MessageProcessorContext(dbc.usersDao.findUserByName, connectedClients.find)
-    val messagesRouter = actorSystem.actorOf(FromConfig.props(MessageProcessor.props(msgProcCtx)), "messagesRouter")
+    val messageGenerator = new MessageGenerator()
+    val msgProcCtx       = MessageProcessorContext(messageGenerator, dbc.usersDao.findUserByName, connectedClients.find)
+    val messagesRouter   = actorSystem.actorOf(FromConfig.props(MessageProcessor.props(msgProcCtx)), "messagesRouter")
 
     val authService = new AuthenticationService(userAuthenticator, dbc.usersDao, connectedClients)
     val httpRouter  = new HttpRouter(dbc, authService, connectedClients, messagesRouter)
