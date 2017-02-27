@@ -7,7 +7,7 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusC
 import akka.http.scaladsl.server.{InvalidOriginRejection, MissingHeaderRejection}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.testkit.TestProbe
-import base.TestSpec
+import base.TestWordSpec
 import core.authentication.AuthenticationService
 import core.db.DatabaseContext
 import core.db.clients.ConnectedClientsStore
@@ -18,7 +18,7 @@ import restapi.http.routes.HttpRouterSpec._
 import restapi.http.routes.support.AllowedOrigins._
 import spray.json._
 
-class HttpRouterSpec extends TestSpec with ScalatestRouteTest with JsonSupport {
+class HttpRouterSpec extends TestWordSpec with ScalatestRouteTest with JsonSupport {
 
   val probe: TestProbe    = TestProbe()
   val mockActor: ActorRef = probe.ref

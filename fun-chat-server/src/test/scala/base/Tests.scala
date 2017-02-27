@@ -6,6 +6,7 @@ import org.mockito.verification.VerificationMode
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{
   BeforeAndAfterEach,
+  FlatSpecLike,
   FunSuiteLike,
   Matchers,
   WordSpecLike,
@@ -15,7 +16,9 @@ import org.scalatest.{
 
 trait TestSuite extends FunSuiteLike with MockitoSupport
 
-trait TestSpec extends WordSpecLike with Matchers with MockitoSupport
+trait TestWordSpec extends WordSpecLike with Matchers with MockitoSupport
+
+trait TestFlatSpec extends FlatSpecLike with Matchers with MockitoSupport
 
 trait MockitoSupport extends iSuite with iTestSuite with MockitoSugar with BeforeAndAfterEach {
 

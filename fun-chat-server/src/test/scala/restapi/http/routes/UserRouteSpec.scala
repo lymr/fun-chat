@@ -3,7 +3,7 @@ package restapi.http.routes
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import base.TestSpec
+import base.TestWordSpec
 import core.authentication.tokenGenerators.JwtBearerTokenGenerator
 import core.db.users.UsersDao
 import core.entities.{SecuredToken, _}
@@ -16,7 +16,7 @@ import scalikejdbc.DBSession
 
 import scala.concurrent.Future
 
-class UserRouteSpec extends TestSpec with ScalatestRouteTest with JsonSupport {
+class UserRouteSpec extends TestWordSpec with ScalatestRouteTest with JsonSupport {
 
   @Mock
   private var mockUsersDao: UsersDao = _

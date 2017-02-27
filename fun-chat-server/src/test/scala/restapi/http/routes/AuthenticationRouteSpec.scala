@@ -4,7 +4,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{Authorization, BasicHttpCredentials, OAuth2BearerToken}
 import akka.http.scaladsl.server.MethodRejection
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import base.TestSpec
+import base.TestWordSpec
 import core.authentication.AuthenticationService
 import core.authentication.tokenGenerators.JwtBearerTokenGenerator
 import core.entities._
@@ -17,7 +17,7 @@ import spray.json._
 
 import scala.concurrent.Future
 
-class AuthenticationRouteSpec extends TestSpec with ScalatestRouteTest with JsonSupport {
+class AuthenticationRouteSpec extends TestWordSpec with ScalatestRouteTest with JsonSupport {
 
   @Mock
   private var mockAuthService: AuthenticationService = _
