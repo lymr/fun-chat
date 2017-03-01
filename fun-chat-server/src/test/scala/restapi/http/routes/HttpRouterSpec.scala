@@ -1,5 +1,7 @@
 package restapi.http.routes
 
+import java.util.concurrent.TimeUnit
+
 import akka.actor.ActorRef
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.headers._
@@ -17,11 +19,17 @@ import restapi.http.entities.ClientInformation
 import restapi.http.routes.HttpRouterSpec._
 import restapi.http.routes.support.AllowedOrigins._
 import spray.json._
+import utils.Configuration
+
+import scala.concurrent.duration.FiniteDuration
 
 class HttpRouterSpec extends TestWordSpec with ScalatestRouteTest with JsonSupport {
 
   val probe: TestProbe    = TestProbe()
   val mockActor: ActorRef = probe.ref
+
+  @Mock
+  private var mockConfiguration: Configuration = _
 
   @Mock
   private var dbContext: DatabaseContext = _
@@ -36,7 +44,8 @@ class HttpRouterSpec extends TestWordSpec with ScalatestRouteTest with JsonSuppo
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    httpRouter = new HttpRouter(dbContext, authService, connectedClientsStore, mockActor)
+    when(mockConfiguration.messageTimeout).thenReturn(FiniteDuration(5, TimeUnit.SECONDS))
+    httpRouter = new HttpRouter(dbContext, authService, connectedClientsStore, mockActor, mockConfiguration)
   }
 
   override def afterEach(): Unit = {

@@ -18,4 +18,4 @@ class MessageGenerator {
   }
 }
 
-case class TranslationError(error: String)
+case class TranslationError(cause: String)

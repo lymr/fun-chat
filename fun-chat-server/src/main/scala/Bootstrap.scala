@@ -36,7 +36,7 @@ class Bootstrap {
     val messagesRouter   = actorSystem.actorOf(FromConfig.props(MessageProcessor.props(msgProcCtx)), "messagesRouter")
 
     val authService = new AuthenticationService(userAuthenticator, dbc.usersDao, connectedClients)
-    val httpRouter  = new HttpRouter(dbc, authService, connectedClients, messagesRouter)
+    val httpRouter  = new HttpRouter(dbc, authService, connectedClients, messagesRouter, config)
     val httpService = new HttpService(httpRouter, config)
     httpService.start()
   }

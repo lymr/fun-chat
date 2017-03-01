@@ -8,25 +8,40 @@ import messages.entities._
 import messages.parser.{MessageGenerator, TranslationError}
 import restapi.http.entities.ClientInformation
 
+import scala.util.{Failure, Success, Try}
+
 class MessageProcessor(ctx: MessageProcessorContext)(implicit materializer: ActorMaterializer)
-    extends Actor
-    with ActorLogging {
+    extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case msg: ForwardRawMessage => processRawMessage(msg)
   }
 
   private def processRawMessage(rawMessage: ForwardRawMessage): Unit = {
-    val processMessage: Message => Unit = {
-      case text: TextMessage => processTextMessage(text)
-      case _: MediaMessage   => // TODO: Add support for media message
+
+    def dispatchMessage(message: Message): Unit = {
+      val triedProcessing = Try {
+        message match {
+          case text: TextMessage => processTextMessage(text)
+          case _: MediaMessage   => // TODO: Add support for media message
+        }
+      }
+
+      triedProcessing match {
+        case Success(_) => sender() ! ProcessingDone
+        case Failure(ex) =>
+          log.error(s"Failed processing message $rawMessage with error :=", ex)
+          sender() ! ProcessingFailure("Failed to process message.")
+      }
     }
 
-    val auditFailure = (failure: TranslationError) => log.error(failure.error)
+    def reportTranslationError(error: TranslationError): Unit = {
+      sender() ! ProcessingFailure(error.cause)
+    }
 
     ctx.messageGenerator
       .generate(rawMessage.message.content, rawMessage.senderCtx.username, rawMessage.message.timestamp)
-      .fold(processMessage, auditFailure)
+      .fold(dispatchMessage, reportTranslationError)
   }
 
   private def processTextMessage(message: TextMessage): Unit = {
@@ -42,6 +57,7 @@ class MessageProcessor(ctx: MessageProcessorContext)(implicit materializer: Acto
     } yield processedMessage
 
     processedMessages.foreach { msg =>
+      //TODO: Messengers should be in a pool !!!
       val messenger: ActorRef = context.actorOf(Messenger.props())
       messenger ! DeliverTextMessage(msg)
     }

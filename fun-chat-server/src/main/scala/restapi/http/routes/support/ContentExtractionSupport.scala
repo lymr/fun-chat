@@ -7,7 +7,5 @@ import restapi.http.entities.ClientInformation
 
 private[http] trait ContentExtractionSupport extends JsonSupport {
 
-  def extractClientInfo: Directive1[ClientInformation] = {
-    entity(as[ClientInformation])
-  }
+  def extractClientInfo: Directive1[ClientInformation] = entity(as[ClientInformation])
 }

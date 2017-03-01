@@ -8,20 +8,22 @@ import core.db.clients.ConnectedClientsStore
 import core.entities.{AuthToken, AuthTokenContext, User}
 import restapi.http.JsonSupport
 import restapi.http.routes.support.CorsSupport
+import utils.Configuration
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class HttpRouter(dbc: DatabaseContext,
                  authService: AuthenticationService,
                  connectedClients: ConnectedClientsStore,
-                 messagesRouter: ActorRef)(implicit ec: ExecutionContext)
+                 messagesRouter: ActorRef,
+                 configuration: Configuration)(implicit ec: ExecutionContext)
     extends Directives with JsonSupport with CorsSupport {
 
   private implicit val ac = new ApiContext(authService.authorize, dbc.usersDao.findUserByName)
 
   private val userRoute     = new UsersRoute(dbc.usersDao)
   private val authRoute     = new AuthenticationRoute(authService)
-  private val messagesRoute = new MessagesRoute(messagesRouter)
+  private val messagesRoute = new MessagesRoute(messagesRouter, configuration.messageTimeout)
 
   val routes: Route = pathPrefix("v1") {
     AccessControlCheck {
