@@ -57,7 +57,7 @@ class MessageProcessor(ctx: MessageProcessorContext)(implicit materializer: Acto
     } yield processedMessage
 
     processedMessages.foreach { msg =>
-      //TODO: Messengers should be in a pool !!!
+      //TODO: Messengers should be in a pool !!! - no need to manage errors, - attachment should have different pool (or allow only ~50% of workers to handle 'heavy' operations)
       val messenger: ActorRef = context.actorOf(Messenger.props())
       messenger ! DeliverTextMessage(msg)
     }

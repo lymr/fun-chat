@@ -1,22 +1,25 @@
 package rest.client
 
+import authentication.fsm.entities.AuthToken
 import rest.client.entities.UserInformationEntity
+
+import scala.concurrent.Future
 
 trait RestClient {
 
-  def options(): Unit
+  def signIn(username: String, password: String): Future[AuthToken]
 
-  def signIn(username: String, password: String): Unit
+  def signUp(username: String, password: String): Future[AuthToken]
 
-  def signUp(username: String, password: String): Unit
+  def signOut(): Future[Int]
 
-  def signOut(): Unit
+  def updateCredentials(newPassword: String): Future[Int]
 
-  def listOnlineUsers(): Seq[UserInformationEntity]
+  def listOnlineUsers(): Future[Seq[UserInformationEntity]]
 
-  def sendMessage(recipient: String, content: String): Unit
+  def findUserInformation(userName: String): Future[UserInformationEntity]
+
+  def removeUser(): Future[Int]
+
+  def sendMessage(recipient: String, content: String): Future[Int]
 }
-
-
-
-

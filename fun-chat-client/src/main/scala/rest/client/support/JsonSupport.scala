@@ -1,6 +1,7 @@
 package rest.client.support
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import authentication.fsm.entities.{AuthToken, BearerToken}
 import org.joda.time.DateTime
 import rest.client.entities.{ClientInformation, UserInformationEntity}
 import spray.json.{JsNumber, JsString, _}
@@ -14,14 +15,28 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
       case jsObject: JsObject =>
         jsObject.getFields("name", "lastSeen") match {
           case Seq(JsString(name), JsNumber(lastSeen)) =>
-            UserInformationEntity(name, new DateTime(lastSeen.toLong))
+            UserInformationEntity(name, lastSeen.toLong)
         }
       case _ => deserializationError("An error occurred while serializing User entity.")
     }
 
     override def write(obj: UserInformationEntity): JsValue = JsObject(
       "name"     -> JsString(obj.name),
-      "lastSeen" -> JsNumber(obj.lastSeen.getMillis)
+      "lastSeen" -> JsNumber(obj.lastSeen)
     )
+  }
+
+  implicit object AuthTokenFormat extends RootJsonFormat[AuthToken] {
+    override def read(json: JsValue): AuthToken = json match {
+      case jsObject: JsObject =>
+        jsObject.getFields("bearer") match {
+          case Seq(JsString(bearer)) => BearerToken(bearer)
+        }
+      case _ => deserializationError("An error occurred while deserialize entity.")
+    }
+
+    override def write(obj: AuthToken): JsValue = obj match {
+      case _ => deserializationError("Operation not supported.")
+    }
   }
 }

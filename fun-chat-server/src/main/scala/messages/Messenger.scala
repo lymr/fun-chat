@@ -11,7 +11,7 @@ class Messenger(implicit materializer: ActorMaterializer) extends Actor {
   override def receive: Receive = {
     case msg: ProcessedTextMessage => deliver(msg)
   }
-
+  //TODO: Replace with cached-connection-pool!
   def deliver(msg: ProcessedTextMessage): Unit = {
     val httpHandler = Http(context.system)
     val requestUri  = Uri().withScheme("http").withHost(msg.recipientClientInfo.ipAddress).withPort(8080)

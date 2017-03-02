@@ -8,9 +8,9 @@ import spray.json._
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
-  implicit val messageEntityFormat         = jsonFormat2(MessageEntity)
-  implicit val clientInformationFormat     = jsonFormat2(ClientInformation)
-  implicit val userIdFormat                = jsonFormat1(UserID)
+  implicit val messageEntityFormat     = jsonFormat2(MessageEntity)
+  implicit val clientInformationFormat = jsonFormat2(ClientInformation)
+  implicit val userIdFormat            = jsonFormat1(UserID)
 
   implicit object UserJsonFormat extends RootJsonFormat[User] {
     override def read(json: JsValue): User = json match {
@@ -50,8 +50,8 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
       deserializationError("Operation not supported.")
 
     override def write(obj: AuthToken): JsValue = obj match {
-      case BearerToken(bearer) => JsString(bearer)
-      case _=> deserializationError("Unsupported AuthToken.")
+      case BearerToken(bearer) => JsObject("bearer" -> JsString(bearer))
+      case _                   => deserializationError("Unsupported AuthToken.")
     }
   }
 }
