@@ -1,7 +1,7 @@
 package authentication.fsm
 
 import akka.actor.{ActorRef, FSM}
-import authentication.fsm.entities._
+import authentication.entities._
 
 sealed trait AuthData
 case object Uninitialized extends AuthData

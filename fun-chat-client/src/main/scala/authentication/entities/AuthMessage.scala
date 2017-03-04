@@ -1,4 +1,4 @@
-package authentication.fsm.entities
+package authentication.entities
 
 abstract class AuthMessage
 

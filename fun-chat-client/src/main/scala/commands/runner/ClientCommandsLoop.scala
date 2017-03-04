@@ -19,14 +19,14 @@ class ClientCommandsLoop(restClient: RestClient, exitCallback: (Int) => Unit) ex
       do {
         val input: String = readLine()
         input match {
-          case HELP         => HelpCommand.execute()
-          case SIGN_IN      => SignInCommand(restClient).execute()
-          case SIGN_UP      => SignUpCommand(restClient).execute()
-          case SIGN_OUT     => println("Method not implemented!")
-          case ONLINE_USERS => println("Method not implemented!")
-          case SEND_MESSAGE => println("Method not implemented!")
-          case EXIT         => exitCallback(0)
-          case other        => logger.info(s"Unsupported command ! $other")
+          case cmd if cmd.startsWith(HELP)         => HelpCommand.execute()
+          case cmd if cmd.startsWith(SIGN_IN)      => SignInCommand(restClient).execute()
+          case cmd if cmd.startsWith(SIGN_UP)      => SignUpCommand(restClient).execute()
+          case cmd if cmd.startsWith(SIGN_OUT)     => println("Method not implemented!")
+          case cmd if cmd.startsWith(ONLINE_USERS) => println("Method not implemented!")
+          case cmd if cmd.startsWith(SEND_MESSAGE) => println("Method not implemented!")
+          case cmd if cmd.startsWith(EXIT)         => exitCallback(0)
+          case other                               => logger.info(s"Unsupported command ! $other")
         }
       } while (true)
     }.recover {

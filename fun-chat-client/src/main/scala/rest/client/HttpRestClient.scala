@@ -10,8 +10,8 @@ import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, Unmarshal}
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Flow, Sink, Source}
-import authentication.fsm.AuthTokenStore
-import authentication.fsm.entities.AuthToken
+import authentication.AuthTokenStore
+import authentication.entities.AuthToken
 import com.typesafe.scalalogging.StrictLogging
 import rest.client.entities.{ClientInformation, UserInformationEntity}
 import rest.client.support.ClientInformationHelper._

@@ -1,7 +1,7 @@
 package rest.client.support
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import authentication.fsm.entities.{AuthToken, BearerToken}
+import authentication.entities.{AuthToken, BearerToken}
 import org.joda.time.DateTime
 import rest.client.entities.{ClientInformation, UserInformationEntity}
 import spray.json.{JsNumber, JsString, _}

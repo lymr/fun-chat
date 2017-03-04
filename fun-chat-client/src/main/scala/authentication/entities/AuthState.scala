@@ -1,4 +1,4 @@
-package authentication.fsm.entities
+package authentication.entities
 
 sealed trait AuthState
 

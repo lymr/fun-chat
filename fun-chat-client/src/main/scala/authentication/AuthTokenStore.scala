@@ -1,6 +1,6 @@
-package authentication.fsm
+package authentication
 
-import authentication.fsm.entities.{AuthToken, BearerToken}
+import authentication.entities.{AuthToken, BearerToken}
 import com.typesafe.scalalogging.StrictLogging
 
 object AuthTokenStore extends StrictLogging {
