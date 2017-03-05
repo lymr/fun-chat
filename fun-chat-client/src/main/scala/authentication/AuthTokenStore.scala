@@ -16,4 +16,6 @@ object AuthTokenStore extends StrictLogging {
     case Some(BearerToken(bearer)) => bearer
     case _ => throw new RuntimeException("Bearer Token is empty!")
   }
+
+  def clear(): Unit = authToken = None
 }

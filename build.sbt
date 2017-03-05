@@ -40,6 +40,7 @@ lazy val `fun-chat-client` = (project in file("fun-chat-client"))
       "com.typesafe.akka"          %% "akka-http-testkit"    % "10.0.0" % "test",
       "com.typesafe.scala-logging" %% "scala-logging"        % "3.5.0",
       "ch.qos.logback"             % "logback-classic"       % "1.1.7",
+      "org.scalatest"              % "scalatest_2.11"        % "3.0.1" % "test",
       "org.mockito"                % "mockito-all"           % "1.10.19" % "test"
     )
   )

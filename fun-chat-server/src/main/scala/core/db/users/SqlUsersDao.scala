@@ -32,6 +32,8 @@ class SqlUsersDao(createCredentialsOp: (UserID, UserSecret) => Unit, updateCrede
     }.update().apply()
 
     val userID = UserID(id.toString)
+
+    //TODO: multi table insert / update should be done within a transaction.
     createCredentialsOp(userID, password)
     User(userID, name, currentTime)
   }

@@ -1,46 +1,50 @@
 package authentication.fsm
 
-import akka.actor.{ActorRef, FSM}
+import akka.actor.{ActorRef, FSM, Props}
 import authentication.entities._
 
-sealed trait AuthData
-case object Uninitialized extends AuthData
-case object ProcessingRequest extends AuthData
+sealed trait StateData
+case object Uninitialized extends StateData
+case class RequestInfo(initiator: ActorRef) extends StateData
 
-class AuthenticationFSM(authenticator: ActorRef) extends FSM[AuthState, AuthData] {
+class AuthenticationFSM(authenticator: ActorRef) extends FSM[AuthState, StateData] {
 
   startWith(Offline, Uninitialized)
 
   when(Offline) {
     case Event(SignIn(username, password), Uninitialized) =>
       authenticator ! SignIn(username, password)
-      goto(SigningIn) using ProcessingRequest replying Processing
+      goto(SigningIn) using RequestInfo(sender)
 
     case Event(SignUp(username, password), Uninitialized) =>
       authenticator ! SignUp(username, password)
-      goto(SigningIn) using ProcessingRequest replying Processing
+      goto(SigningIn) using RequestInfo(sender)
   }
 
   when(Online) {
     case Event(SignOut, Uninitialized) =>
       authenticator ! SignOut
-      goto(SigningOut) using ProcessingRequest replying Processing
+      goto(SigningOut) using RequestInfo(sender)
   }
 
   when(SigningIn) {
-    case Event(ProcessingDone(result), ProcessingRequest) =>
-      result match {
-        case Success => goto(Online) using Uninitialized replying Success
-        case Failure => goto(Offline) using Uninitialized replying Failure
-      }
+    case Event(Authenticated, RequestInfo(initiator)) =>
+      initiator ! Authenticated
+      goto(Online) using Uninitialized
+
+    case Event(AuthFailure(error), RequestInfo(initiator)) =>
+      initiator ! AuthFailure(error)
+      goto(Offline) using Uninitialized
   }
 
   when(SigningOut) {
-    case Event(ProcessingDone(result), ProcessingRequest) =>
-      result match {
-        case Success => goto(Offline) using Uninitialized replying Success
-        case Failure => goto(Online) using Uninitialized replying Failure
-      }
+    case Event(Disconnected, RequestInfo(initiator)) =>
+      initiator ! Disconnected
+      goto(Offline) using Uninitialized
+
+    case Event(AuthFailure(error), RequestInfo(initiator)) =>
+      initiator ! AuthFailure(error)
+      goto(Online) using Uninitialized
   }
 
   onTransition {
@@ -51,4 +55,8 @@ class AuthenticationFSM(authenticator: ActorRef) extends FSM[AuthState, AuthData
   }
 
   initialize()
+}
+
+object AuthenticationFSM {
+  def props(authenticator: ActorRef): Props = Props(new AuthenticationFSM(authenticator))
 }

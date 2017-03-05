@@ -13,7 +13,7 @@ import akka.stream.scaladsl.{Flow, Sink, Source}
 import authentication.AuthTokenStore
 import authentication.entities.AuthToken
 import com.typesafe.scalalogging.StrictLogging
-import rest.client.entities.{ClientInformation, UserInformationEntity}
+import rest.client.entities.{ClientInformation, ExecutionResultCode, UserInformationEntity}
 import rest.client.support.ClientInformationHelper._
 import rest.client.support.JsonSupport
 import spray.json._
@@ -159,7 +159,7 @@ class HttpRestClient(config: Configuration)(implicit actorSystem: ActorSystem, m
 
     val extract = (response: HttpResponse) => {
       val eventualInt = response.status match {
-        case StatusCodes.OK => Future.successful(0)
+        case StatusCodes.OK => Future.successful(ExecutionResultCode.OK)
         case _              => Future.failed(new Exception(response.toString()))
       }
       response.discardEntityBytes()
