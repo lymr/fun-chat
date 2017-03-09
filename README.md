@@ -6,7 +6,8 @@ well known IM protocols, however its main goal is to demonstrate a fully asynchr
  architecture utilizing Scala, Akka, Akka-HTTP and PostgreSQL with ScalikeJDBC.
 
 # Technical Features
-* Asynchronous message based architecture for server as well as client using Akka.\n
+* Asynchronous message based architecture for server as well as client using Akka.
+
  (Load balanced router | FSM | Actors pool | Become)
 * REST API with Akka-HTTP.
 * Non-blocking I/O with Akka actors.
@@ -21,7 +22,7 @@ well known IM protocols, however its main goal is to demonstrate a fully asynchr
 * Share a picture / document with a friends.
 * Easy message sending with a simple DSL.
 
-```c
+```markdown
     /**
     *   Message grammar
     *
