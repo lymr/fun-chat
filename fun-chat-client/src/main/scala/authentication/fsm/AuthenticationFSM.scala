@@ -25,6 +25,10 @@ class AuthenticationFSM(authenticator: ActorRef) extends FSM[AuthState, StateDat
     case Event(SignOut, Uninitialized) =>
       authenticator ! SignOut
       goto(SigningOut) using RequestInfo(sender)
+
+    case Event(UpdateCredentials(password), Uninitialized) =>
+      authenticator ! UpdateCredentials(password)
+      goto(Updating) using RequestInfo(sender)
   }
 
   when(SigningIn) {
@@ -45,6 +49,11 @@ class AuthenticationFSM(authenticator: ActorRef) extends FSM[AuthState, StateDat
     case Event(AuthFailure(error), RequestInfo(initiator)) =>
       initiator ! AuthFailure(error)
       goto(Online) using Uninitialized
+  }
+
+  when(Updating) {
+    case Event(_, _) => //TODO: implement!
+    stay()
   }
 
   onTransition {

@@ -9,7 +9,8 @@ import commands.runner.ClientCommandsLoop
 import rest.client.HttpRestClient
 import utils.Configuration
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.{Duration, SECONDS}
+import scala.concurrent.{Await, ExecutionContext}
 
 class Bootstrap() {
 
@@ -28,11 +29,19 @@ class Bootstrap() {
 
     val onFailureCallback = (cmd: ClientCommand, ex: Throwable) =>
       println(s"Failed executing command $cmd with error:= ${ex.getMessage}")
+
+    val exitCallback = (exitCode: Int) => {
+      val whenTerminated = actorSystem.terminate()
+      Await.result(whenTerminated, Duration(30, SECONDS))
+      System.exit(exitCode)
+    }
+
     val commandParser: CommandParser = new CommandParser()
+    val messanger: ActorRef          = null //TODO: create executor
+    val clientCommandsExecutor: ActorRef =
+      actorSystem.actorOf(CommandExecutor.props(commandParser, authenticationFSM, messanger), "command-executor")
 
-    val clientCommandsExecutor = new CommandExecutor(commandParser, authenticationFSM, onFailureCallback, System.exit)
-
-    val clientCommandsLoop = new ClientCommandsLoop(clientCommandsExecutor)
+    val clientCommandsLoop = new ClientCommandsLoop(clientCommandsExecutor, exitCallback)
     clientCommandsLoop.start()
   }
 }

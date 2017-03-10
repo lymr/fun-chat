@@ -8,6 +8,7 @@ final case class SignIn(username: String, password: String) extends AuthRequest
 
 final case class SignUp(username: String, password: String) extends AuthRequest
 
+final case class UpdateCredentials(password: String) extends AuthRequest
 
 abstract class AuthResponse
 
