@@ -10,9 +10,9 @@ CREATE TABLE users (
 CREATE TABLE user_credentials (
     id          SERIAL PRIMARY KEY,
     user_id     UUID NOT NULL UNIQUE,
-    password    BYTEA,
-    salt        BYTEA,
-    algorithm   VARCHAR(64),
+    password    VARCHAR(256) NOT NULL,
+    salt        VARCHAR(128) NOT NULL,
+    algorithm   VARCHAR(64) NOT NULL,
 
     CONSTRAINT user_credentials_fk FOREIGN KEY (user_id)
         REFERENCES users (user_id) ON DELETE CASCADE

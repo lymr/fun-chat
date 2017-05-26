@@ -6,15 +6,15 @@ import scalikejdbc._
 
 trait UsersDao {
 
-  def createUser(name: String, secret: UserSecret)(implicit session: DBSession = AutoSession): User
-
   def findUsers()(implicit session: DBSession = AutoSession): Seq[User]
 
   def findUserByName(name: String)(implicit session: DBSession = AutoSession): Option[User]
 
   def findUserByID(userId: UserID)(implicit session: DBSession = AutoSession): Option[User]
 
-  def updateUser(userId: UserID, secret: UserSecret)(implicit session: DBSession = AutoSession): Unit
+  def createUser(name: String, secret: UserSecret): User
+
+  def updateUser(userId: UserID, secret: UserSecret): Unit
 
   def updateUserLastSeen(userId: UserID, timestamp: DateTime)(implicit session: DBSession = AutoSession): Unit
 

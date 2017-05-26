@@ -6,7 +6,7 @@ import core.db.PostgreSQLExtensions
 import core.entities.{CredentialSet, UserID, UserSecret}
 import scalikejdbc._
 
-case class CredentialsDaoEntity(userId: String, password: Array[Byte], salt: Array[Byte], algorithm: String)
+case class CredentialsDaoEntity(userId: String, password: String, salt: String, algorithm: String)
 
 object CredentialsDaoEntity extends SQLSyntaxSupport[CredentialsDaoEntity] {
   override def tableName: String = "user_credentials"
@@ -15,7 +15,7 @@ object CredentialsDaoEntity extends SQLSyntaxSupport[CredentialsDaoEntity] {
     apply(uc.resultName)(rs)
 
   def apply(uc: ResultName[CredentialsDaoEntity])(rs: WrappedResultSet): CredentialsDaoEntity =
-    CredentialsDaoEntity(rs.string(uc.userId), rs.bytes(uc.password), rs.bytes(uc.salt), rs.string(uc.algorithm))
+    CredentialsDaoEntity(rs.string(uc.userId), rs.string(uc.password), rs.string(uc.salt), rs.string(uc.algorithm))
 }
 
 class SqlUserCredentialsDao(credentialsGenerator: UserSecret => Option[CredentialSet])

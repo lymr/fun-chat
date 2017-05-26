@@ -9,7 +9,7 @@ class DatabaseContext extends DatabasePrerequisite {
   val credentialsDao: UserCredentialsDao = new SqlUserCredentialsDao(
     UserSecretUtils.encrypt(_, SecuredTokenGenerator.generate))
 
-  val usersDao: UsersDao = new SqlUsersDao(credentialsDao.createUserCredentials, credentialsDao.updateUserCredentials)
+  val usersDao: UsersDao = new SqlUsersDao(credentialsDao)
 }
 
 trait DatabasePrerequisite {

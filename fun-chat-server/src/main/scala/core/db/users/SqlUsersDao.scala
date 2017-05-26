@@ -18,25 +18,9 @@ object UserDaoEntity extends SQLSyntaxSupport[UserDaoEntity] {
     UserDaoEntity(rs.string(u.userId), rs.string(u.userName), rs.jodaDateTime(u.lastSeen))
 }
 
-class SqlUsersDao(createCredentialsOp: (UserID, UserSecret) => Unit, updateCredentialsOp: (UserID, UserSecret) => Unit)
-    extends UsersDao with PostgreSQLExtensions {
+class SqlUsersDao(credentialsDao: UserCredentialsDao) extends UsersDao with PostgreSQLExtensions {
 
   val u = UserDaoEntity.syntax("u")
-
-  override def createUser(name: String, password: UserSecret)(implicit session: DBSession): User = {
-    val id: UUID              = UUID.randomUUID()
-    val currentTime: DateTime = DateTime.now
-    val uc                    = UserDaoEntity.column
-    withSQL {
-      insert.into(UserDaoEntity).namedValues(uc.userId -> id, uc.userName -> name, uc.lastSeen -> currentTime)
-    }.update().apply()
-
-    val userID = UserID(id.toString)
-
-    //TODO: multi table insert / update should be done within a transaction.
-    createCredentialsOp(userID, password)
-    User(userID, name, currentTime)
-  }
 
   override def findUsers()(implicit session: DBSession): Seq[User] = {
     withSQL {
@@ -57,15 +41,29 @@ class SqlUsersDao(createCredentialsOp: (UserID, UserSecret) => Unit, updateCrede
     }.map(UserDaoEntity(u)).single().apply().map(toUser)
   }
 
-  override def updateUser(userId: UserID, secret: UserSecret)(implicit session: DBSession): Unit = {
-    val id: UUID = UUID.fromString(userId.id)
+  override def createUser(name: String, password: UserSecret): User = DB localTx { implicit session =>
+    val id: UUID              = UUID.randomUUID()
     val currentTime: DateTime = DateTime.now
-    val uc       = UserDaoEntity.column
+    val uc                    = UserDaoEntity.column
+    withSQL {
+      insert.into(UserDaoEntity).namedValues(uc.userId -> id, uc.userName -> name, uc.lastSeen -> currentTime)
+    }.update().apply()
+
+    val userID = UserID(id.toString)
+
+    credentialsDao.createUserCredentials(userID, password)
+    User(userID, name, currentTime)
+  }
+
+  override def updateUser(userId: UserID, secret: UserSecret): Unit = DB localTx { implicit session =>
+    val id: UUID              = UUID.fromString(userId.id)
+    val currentTime: DateTime = DateTime.now
+    val uc                    = UserDaoEntity.column
     withSQL {
       update(UserDaoEntity).set(uc.lastSeen -> currentTime).where.eq(uc.userId, id)
     }.update().apply()
 
-    updateCredentialsOp(userId, secret)
+    credentialsDao.updateUserCredentials(userId, secret)
   }
 
   override def updateUserLastSeen(userId: UserID, timestamp: DateTime)(implicit session: DBSession): Unit = {

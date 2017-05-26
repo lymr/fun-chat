@@ -1,24 +1,39 @@
 package base
 
+import org.flywaydb.core.Flyway
 import org.hamcrest.Matcher
 import org.mockito.MockitoAnnotations
 import org.mockito.verification.VerificationMode
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{
-  BeforeAndAfterEach,
-  FlatSpecLike,
-  FunSuiteLike,
-  Matchers,
-  WordSpecLike,
-  Suite => iSuite,
-  TestSuite => iTestSuite
-}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpecLike, FunSuiteLike, Matchers, WordSpecLike, fixture, Suite => iSuite, TestSuite => iTestSuite}
+import scalikejdbc.config.DBsWithEnv
+import scalikejdbc.scalatest.AutoRollback
+import scalikejdbc.{ConnectionPool, GlobalSettings}
 
 trait TestSuite extends FunSuiteLike with MockitoSupport
 
 trait TestWordSpec extends WordSpecLike with Matchers with MockitoSupport
 
 trait TestFlatSpec extends FlatSpecLike with Matchers with MockitoSupport
+
+trait FixtureTestSuite extends fixture.FunSuiteLike with AutoRollback with Matchers with MockitoSupport with BeforeAndAfterAll {
+
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    GlobalSettings.jtaDataSourceCompatible = true
+    DBsWithEnv("test").setupAll()
+
+    val flyway = new Flyway()
+    flyway.setDataSource(ConnectionPool().dataSource)
+    flyway.clean()
+    flyway.migrate()
+  }
+
+  override def afterAll(): Unit = {
+    super.afterAll()
+    DBsWithEnv("test").closeAll()
+  }
+}
 
 trait MockitoSupport extends iSuite with iTestSuite with MockitoSugar with BeforeAndAfterEach {
 
