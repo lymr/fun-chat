@@ -5,7 +5,9 @@ import core.authentication.UserSecretUtils
 import core.authentication.tokenGenerators.SecuredTokenGenerator
 import core.db.users.SqlUserDaoSuite._
 import core.entities.{CredentialSet, SecuredToken, UserID, UserSecret}
+import org.scalatest.Ignore
 
+@Ignore
 class SqlUserDaoSuite extends FixtureTestSuite {
 
   private var credentialsDao: UserCredentialsDao = _
