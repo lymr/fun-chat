@@ -9,8 +9,7 @@ import utils.{HelpPrinter, UserInformer}
 import scala.io.StdIn.readLine
 import scala.util.Try
 
-class ClientCommandsLoop(executor: ActorRef, exitCallback: (Int) => Unit)
-    extends StrictLogging with UserInformer{
+class ClientCommandsLoop(executor: ActorRef, exitCallback: (Int) => Unit) extends StrictLogging with UserInformer {
 
   def start(): Unit = {
     informUserCallback(

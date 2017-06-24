@@ -1,9 +1,8 @@
 package commands.parser
 
-class CommandParser {
+import commands.parser.CommandParser._
 
-  private val ArgumentsDelimiter: String = "-"
-  private val TokensDelimiter: String    = " "
+class CommandParser {
 
   def parse(args: String, commandTokens: Set[String]): Map[String, String] = {
     if (commandTokens.isEmpty) Map.empty[String, String] else parseArgumentsString(args, commandTokens)
@@ -31,5 +30,9 @@ class CommandParser {
       .map(toKeyValuePair)
       .toMap
   }
+}
 
+object CommandParser {
+  private val ArgumentsDelimiter: String = "-"
+  private val TokensDelimiter: String    = " "
 }

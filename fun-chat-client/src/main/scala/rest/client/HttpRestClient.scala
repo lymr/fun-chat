@@ -125,18 +125,6 @@ class HttpRestClient(config: Configuration)(implicit actorSystem: ActorSystem, m
       .runWith(Sink.head)
   }
 
-  override def sendMessage(recipient: String, content: String): Future[Int] = {
-    val messagesUri              = serverUri.withPath(Path(s"/v1/messages"))
-    val bearerTokenHeader        = Authorization(OAuth2BearerToken(AuthTokenStore.getBearerToken))
-    val headers: Seq[HttpHeader] = Seq(originHeader, bearerTokenHeader)
-
-    Source
-      .single(HttpRequest(HttpMethods.POST, messagesUri) -> 8)
-      .via(cachedPoolClientFlow)
-      .via(intUnmarshallerFlow)
-      .runWith(Sink.head)
-  }
-
   private def entityUnmarshallerFlow[A](
       implicit unmarshaller: FromEntityUnmarshaller[A]): Flow[(Try[HttpResponse], Int), A, NotUsed] = {
 

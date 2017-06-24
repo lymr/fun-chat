@@ -2,10 +2,7 @@ package authentication.fsm
 
 import akka.actor.{ActorRef, FSM, Props}
 import authentication.entities._
-
-sealed trait StateData
-case object Uninitialized extends StateData
-case class RequestInfo(initiator: ActorRef) extends StateData
+import authentication.fsm.AuthenticationFSM._
 
 class AuthenticationFSM(authenticator: ActorRef) extends FSM[AuthState, StateData] {
 
@@ -53,7 +50,7 @@ class AuthenticationFSM(authenticator: ActorRef) extends FSM[AuthState, StateDat
 
   when(Updating) {
     case Event(_, _) => //TODO: implement!
-    stay()
+      stay()
   }
 
   onTransition {
@@ -68,4 +65,8 @@ class AuthenticationFSM(authenticator: ActorRef) extends FSM[AuthState, StateDat
 
 object AuthenticationFSM {
   def props(authenticator: ActorRef): Props = Props(new AuthenticationFSM(authenticator))
+
+  sealed trait StateData
+  private case object Uninitialized extends StateData
+  private case class RequestInfo(initiator: ActorRef) extends StateData
 }

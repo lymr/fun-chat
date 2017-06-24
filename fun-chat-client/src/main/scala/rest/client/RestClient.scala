@@ -20,6 +20,4 @@ trait RestClient {
   def findUserInformation(userName: String): Future[UserInformationEntity]
 
   def removeUser(): Future[Int]
-
-  def sendMessage(recipient: String, content: String): Future[Int]
 }

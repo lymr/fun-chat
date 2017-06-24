@@ -15,30 +15,30 @@ class Authenticator(restClient: RestClient) extends Actor with ActorLogging {
   override def receive: Receive = {
     case SignIn(user, password) =>
       restClient.signIn(user, password)
-        .recover {
-          case ex: Throwable => AuthFailure(ex)
-        }
         .map {
           case (token: AuthToken) => AuthTokenStore.updateToken(token); Authenticated
+        }
+        .recover {
+          case ex: Throwable => AuthFailure(ex)
         } pipeTo sender()
 
     case SignUp(user, password) =>
       restClient.signUp(user, password)
-        .recover {
-          case ex: Throwable => AuthFailure(ex)
-        }
         .map {
           case (token: AuthToken) => AuthTokenStore.updateToken(token); Authenticated
+        }
+        .recover {
+          case ex: Throwable => AuthFailure(ex)
         } pipeTo sender()
 
     case SignOut =>
       restClient.signOut()
-        .recover {
-          case ex: Throwable => AuthFailure(ex)
-        }
         .map {
           case ExecutionResultCode.OK => AuthTokenStore.clear(); Disconnected
-          case _                      => AuthFailure(new RuntimeException("Operation failed with unknown error"))
+          case _ => AuthFailure(new RuntimeException("Operation failed with unknown error"))
+        }
+        .recover {
+          case ex: Throwable => AuthFailure(ex)
         } pipeTo sender()
   }
 }

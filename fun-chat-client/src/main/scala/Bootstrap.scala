@@ -27,9 +27,6 @@ class Bootstrap() {
     val authenticationFSM: ActorRef =
       actorSystem.actorOf(AuthenticationFSM.props(authenticator), "authenticationFSM")
 
-    val onFailureCallback = (cmd: ClientCommand, ex: Throwable) =>
-      println(s"Failed executing command $cmd with error:= ${ex.getMessage}")
-
     val exitCallback = (exitCode: Int) => {
       val whenTerminated = actorSystem.terminate()
       Await.result(whenTerminated, Duration(30, SECONDS))
