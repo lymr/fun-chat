@@ -2,7 +2,6 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.ActorMaterializer
 import authentication.Authenticator
 import authentication.fsm.AuthenticationFSM
-import commands.entities.ClientCommand
 import commands.executor.CommandExecutor
 import commands.parser.CommandParser
 import commands.runner.ClientCommandsLoop
@@ -34,9 +33,9 @@ class Bootstrap() {
     }
 
     val commandParser: CommandParser = new CommandParser()
-    val messanger: ActorRef          = null //TODO: create executor
+    val messenger: ActorRef          = null //TODO: create executor
     val clientCommandsExecutor: ActorRef =
-      actorSystem.actorOf(CommandExecutor.props(commandParser, authenticationFSM, messanger), "command-executor")
+      actorSystem.actorOf(CommandExecutor.props(commandParser, authenticationFSM, restClient, messenger), "command-executor")
 
     val clientCommandsLoop = new ClientCommandsLoop(clientCommandsExecutor, exitCallback)
     clientCommandsLoop.start()
