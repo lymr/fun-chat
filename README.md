@@ -40,10 +40,5 @@ well known IM protocols, however its main goal is to demonstrate a fully asynchr
     delimiter   :   ',' |   ';'
 ```
 
-## Requirements
-* Scala 2.11.8 (https://www.scala-lang.org/documentation/)
-* JDK 8        (http://www.oracle.com/technetwork/java/javase/downloads/index.html);
-* sbt          (http://www.scala-sbt.org/release/docs/Getting-Started/Setup.html);
-
 ## Copyright
 * Copyright (C) 2016 Mor Levy.
