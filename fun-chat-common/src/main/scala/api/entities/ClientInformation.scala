@@ -1,4 +1,4 @@
-package restapi.http.entities
+package api.entities
 
 /**
   * Authenticated client information

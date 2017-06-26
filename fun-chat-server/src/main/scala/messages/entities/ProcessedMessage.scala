@@ -1,6 +1,6 @@
 package messages.entities
 
-import restapi.http.entities.ClientInformation
+import api.entities.ClientInformation
 
 abstract class ProcessedMessage {
   val senderName: String

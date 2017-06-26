@@ -1,6 +1,6 @@
 package messages.entities
 
+import api.entities.MessageEntity
 import core.entities.AuthTokenContext
-import restapi.http.entities.MessageEntity
 
 case class ForwardRawMessage(message: MessageEntity, senderCtx: AuthTokenContext)

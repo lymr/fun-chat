@@ -1,8 +1,5 @@
 package core.entities
 
-/**
-  * Defines General Token*
-  */
 abstract class Token
 
 abstract class AuthToken extends Token

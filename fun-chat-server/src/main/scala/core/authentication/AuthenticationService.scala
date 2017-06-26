@@ -1,10 +1,10 @@
 package core.authentication
 
 import akka.Done
+import api.entities.ClientInformation
 import core.db.clients.ConnectedClientsStore
 import core.db.users.UsersDao
 import core.entities._
-import restapi.http.entities.ClientInformation
 
 import scala.concurrent.{ExecutionContext, Future}
 

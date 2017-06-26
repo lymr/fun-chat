@@ -8,10 +8,10 @@ import akka.http.scaladsl.model.Uri.Path
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.stream.ActorMaterializer
+import api.entities.{ClientInformation, UserInformationEntity}
 import authentication.AuthTokenStore
 import authentication.entities.AuthToken
 import com.typesafe.scalalogging.StrictLogging
-import rest.client.entities.{ClientInformation, UserInformationEntity}
 import rest.client.support.ClientInformationHelper._
 import rest.client.support.JsonSupport
 import spray.json._

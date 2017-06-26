@@ -2,11 +2,11 @@ package messages
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.stream.ActorMaterializer
+import api.entities.ClientInformation
 import core.entities.{User, UserID}
 import messages.MessageProcessor._
 import messages.entities._
 import messages.parser.{MessageGenerator, TranslationError}
-import restapi.http.entities.ClientInformation
 
 import scala.util.{Failure, Success, Try}
 

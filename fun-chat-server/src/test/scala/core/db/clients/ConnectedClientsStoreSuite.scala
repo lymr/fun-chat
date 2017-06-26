@@ -1,10 +1,10 @@
 package core.db.clients
 
+import api.entities.ClientInformation
 import base.TestSuite
 import core.db.clients.ConnectedClientsStoreSuite._
 import core.entities.UserID
 import org.mockito.Mock
-import restapi.http.entities.ClientInformation
 
 class ConnectedClientsStoreSuite extends TestSuite {
 

@@ -4,6 +4,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{Authorization, BasicHttpCredentials, OAuth2BearerToken}
 import akka.http.scaladsl.server.MethodRejection
 import akka.http.scaladsl.testkit.ScalatestRouteTest
+import api.entities.ClientInformation
 import base.TestWordSpec
 import core.authentication.AuthenticationService
 import core.authentication.tokenGenerators.JwtBearerTokenGenerator
@@ -11,7 +12,6 @@ import core.entities._
 import org.joda.time.DateTime
 import org.mockito.Mock
 import restapi.http.JsonSupport
-import restapi.http.entities.ClientInformation
 import restapi.http.routes.AuthenticationRouteSpec._
 import spray.json._
 

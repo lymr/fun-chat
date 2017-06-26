@@ -1,7 +1,7 @@
 package rest.client
 
+import api.entities.UserInformationEntity
 import authentication.entities.AuthToken
-import rest.client.entities.UserInformationEntity
 
 import scala.concurrent.Future
 

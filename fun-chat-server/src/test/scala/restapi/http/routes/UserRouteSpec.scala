@@ -3,6 +3,7 @@ package restapi.http.routes
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
+import api.entities.UserInformationEntity
 import base.TestWordSpec
 import core.authentication.tokenGenerators.JwtBearerTokenGenerator
 import core.db.users.UsersDao
@@ -10,9 +11,9 @@ import core.entities.{SecuredToken, _}
 import org.joda.time.DateTime
 import org.mockito.Mock
 import restapi.http.JsonSupport
-import restapi.http.entities.UserInformationEntity
 import restapi.http.routes.UserRouteSpec._
 import scalikejdbc.DBSession
+import UserInformationEntityConverters._
 
 import scala.concurrent.Future
 
@@ -48,13 +49,13 @@ class UserRouteSpec extends TestWordSpec with ScalatestRouteTest with JsonSuppor
 
   "check users endpoint" in {
     Get("/users/") ~> addHeader(Authorization(OAuth2BearerToken(TOKEN_1))) ~> userRoute.route ~> check {
-      entityAs[Seq[UserInformationEntity]] shouldEqual USERS.map(UserInformationEntity.fromUser)
+      entityAs[Seq[UserInformationEntity]] shouldEqual USERS.map(toUserInformationEntity)
     }
   }
 
   "check users endpoint without end slash" in {
     Get("/users") ~> addHeader(Authorization(OAuth2BearerToken(TOKEN_1))) ~> userRoute.route ~> check {
-      entityAs[Seq[UserInformationEntity]] shouldEqual USERS.map(UserInformationEntity.fromUser)
+      entityAs[Seq[UserInformationEntity]] shouldEqual USERS.map(toUserInformationEntity)
     }
   }
 
@@ -66,7 +67,7 @@ class UserRouteSpec extends TestWordSpec with ScalatestRouteTest with JsonSuppor
 
   "check get: users/name/x endpoint" in {
     Get("/users/name/user-1") ~> addHeader(Authorization(OAuth2BearerToken(TOKEN_1))) ~> userRoute.route ~> check {
-      entityAs[UserInformationEntity] shouldEqual UserInformationEntity.fromUser(USERS.head)
+      entityAs[UserInformationEntity] shouldEqual toUserInformationEntity(USERS.head)
     }
   }
 

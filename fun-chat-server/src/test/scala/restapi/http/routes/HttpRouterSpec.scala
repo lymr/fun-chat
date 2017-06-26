@@ -9,13 +9,13 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusC
 import akka.http.scaladsl.server.{InvalidOriginRejection, MissingHeaderRejection}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.testkit.TestProbe
+import api.entities.ClientInformation
 import base.TestWordSpec
 import core.authentication.AuthenticationService
 import core.db.DatabaseContext
 import core.db.clients.ConnectedClientsStore
 import org.mockito.Mock
 import restapi.http.JsonSupport
-import restapi.http.entities.ClientInformation
 import restapi.http.routes.HttpRouterSpec._
 import restapi.http.routes.support.AllowedOrigins._
 import spray.json._
