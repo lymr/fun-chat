@@ -137,7 +137,7 @@ private object AuthenticationRouteSpec {
   val SECRET       = UserSecret(PASSWORD)
   val NEW_SECRET   = UserSecret(NEW_PASSWORD)
 
-  val CLIENT_INFO   = ClientInformation("v1.0", "10.1.1.138")
+  val CLIENT_INFO   = ClientInformation("v1.0")
   val SECURED_TOKEN = SecuredToken("test-secret".toCharArray.map(_.toByte))
 
   val BEARER_TOKEN_GENERATOR =

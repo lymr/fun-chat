@@ -13,15 +13,15 @@ import scala.util.Try
 class UsersRoute(usersDao: UsersDao)(implicit ec: ExecutionContext, ac: ApiContext)
     extends Directives with SecuredAccessSupport with JsonSupport {
 
-  val route: Route = pathPrefix("users") {
-    securedAccess { ctx =>
-      pathEndOrSingleSlash {
-        get {
-          complete(usersDao.findUsers().map(toUserInformationEntity))
-        }
-      } ~
-        pathPrefix("name" / Segment) { name =>
-          pathEndOrSingleSlash {
+  val route: Route =
+    pathPrefix("users") {
+      securedAccess { ctx =>
+        pathEndOrSingleSlash {
+          get {
+            complete(usersDao.findUsers().map(toUserInformationEntity))
+          }
+        } ~
+          path("name" / Segment) { name =>
             get {
               complete {
                 val maybeUser = usersDao.findUserByName(name)
@@ -40,8 +40,7 @@ class UsersRoute(usersDao: UsersDao)(implicit ec: ExecutionContext, ac: ApiConte
                 }
               }
           }
-        }
+      }
     }
-  }
 
 }

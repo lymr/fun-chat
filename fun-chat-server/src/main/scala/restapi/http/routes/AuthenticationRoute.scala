@@ -13,9 +13,9 @@ import scala.concurrent.ExecutionContext
 class AuthenticationRoute(authService: AuthenticationService)(implicit ec: ExecutionContext, ac: ApiContext)
     extends Directives with SecuredAccessSupport with ContentExtractionSupport with JsonSupport {
 
-  val route: Route = pathPrefix("auth") {
-    path("signIn") {
-      pathEndOrSingleSlash {
+  val route: Route =
+    pathPrefix("auth") {
+      path("signIn") {
         post {
           extractClientInfo { clientInfo =>
             extractCredentials {
@@ -25,10 +25,8 @@ class AuthenticationRoute(authService: AuthenticationService)(implicit ec: Execu
             }
           }
         }
-      }
-    } ~
-      path("signUp") {
-        pathEndOrSingleSlash {
+      } ~
+        path("signUp") {
           post {
             extractClientInfo { clientInfo =>
               extractCredentials {
@@ -38,20 +36,16 @@ class AuthenticationRoute(authService: AuthenticationService)(implicit ec: Execu
               }
             }
           }
-        }
-      } ~
-      path("signOut") {
-        pathEndOrSingleSlash {
+        } ~
+        path("signOut") {
           securedAccess { ctx =>
             post {
               complete(authService.signOut(ctx.userId))
             }
           }
         }
-      }
-  } ~
-      pathPrefix("credentials") {
-      pathEndOrSingleSlash {
+    } ~
+      path("credentials") {
         securedAccess { ctx =>
           patch {
             entity(as[String]) { password =>
@@ -60,6 +54,5 @@ class AuthenticationRoute(authService: AuthenticationService)(implicit ec: Execu
           }
         }
       }
-    }
 
 }

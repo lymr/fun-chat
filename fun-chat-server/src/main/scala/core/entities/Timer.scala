@@ -45,5 +45,6 @@ case class IntervalTimestamp(timestamp: Long, intervalStep: Long) {
 }
 
 object Timer {
+  //TODO: Should be taken from configuration
   val DEFAULT_INTERVAL_STEP: Long = FiniteDuration(90, "minutes").toSeconds
 }
