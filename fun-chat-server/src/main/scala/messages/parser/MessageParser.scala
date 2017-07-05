@@ -5,7 +5,7 @@ import messages.parser.MessageConstants._
 import messages.parser.error._
 import utils.StringUtils._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 import scala.util.parsing.combinator.{JavaTokenParsers, PackratParsers}
 
 object MessageConstants {
@@ -40,7 +40,7 @@ class MessageParser extends JavaTokenParsers with PackratParsers with StrictLogg
     case subjects ~ content => Send(content, subjects)
   }
 
-  def parse(text: String)(implicit ec: ExecutionContext): Future[Operation] = Future {
+  def parse(text: String): Try[Operation] = Try {
     val parsedResult = parseAll(sendOperation, text)
     parsedResult match {
       case Success(r, _)  => r

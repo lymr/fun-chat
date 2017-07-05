@@ -3,14 +3,14 @@ package messages.parser
 import messages.entities.{MediaMessage, Message, TextMessage}
 import messages.parser.error.RecipientsListEmptyException
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 class MessageGenerator {
 
   private val parser: MessageParser         = new MessageParser()
   private val translator: MessageTranslator = new MessageTranslator()
 
-  def generate(input: String, sender: String, timestamp: Long)(implicit ec: ExecutionContext): Future[Message] = {
+  def generate(input: String, sender: String, timestamp: Long): Try[Message] = {
     parser.parse(input).map(translator.translate).map(generateMessage(_, sender, timestamp))
   }
 
