@@ -43,7 +43,7 @@ class JwtBearerTokenGenerator(keyGenerator: () => SecuredToken, timer: Timer)
     }
   }
 
-  //TODO: don't create new token, just update expiration time.
+  //TODO: don't create new token, just update expiration time. Add one time token claim store, update on touch.
   def touch(bearer: BearerToken): Option[BearerToken] = {
     decode(bearer) match {
       case Some(user) => create(user)

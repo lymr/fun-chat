@@ -21,6 +21,5 @@ class Configuration {
 
   val tokenExpiration: Long = authorization.getDuration("token-expiration").getSeconds
 
-  val messageTimeout: FiniteDuration =
-    FiniteDuration(messages.getDuration("message-timeout").getSeconds, SECONDS)
+  val messageTimeout: FiniteDuration = FiniteDuration(messages.getDuration("message-timeout").getSeconds, SECONDS)
 }
