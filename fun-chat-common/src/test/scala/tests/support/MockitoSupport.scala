@@ -1,4 +1,4 @@
-package base
+package tests.support
 
 import org.hamcrest.Matcher
 import org.mockito.MockitoAnnotations

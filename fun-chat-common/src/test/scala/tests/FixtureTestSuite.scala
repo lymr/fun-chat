@@ -1,12 +1,13 @@
-package base
+package tests
 
 import org.flywaydb.core.Flyway
-import org.scalatest.{BeforeAndAfterAll, Matchers, fixture}
+import org.scalatest.{BeforeAndAfterAll, fixture}
 import scalikejdbc.config.DBsWithEnv
 import scalikejdbc.scalatest.AutoRollback
 import scalikejdbc.{ConnectionPool, GlobalSettings}
+import tests.support.MockitoSupport
 
-trait FixtureTestSuite extends fixture.FunSuiteLike with AutoRollback with Matchers with MockitoSupport with BeforeAndAfterAll {
+trait FixtureTestSuite extends fixture.FunSuiteLike with AutoRollback with MockitoSupport with BeforeAndAfterAll {
 
   override def beforeAll(): Unit = {
     super.beforeAll()
