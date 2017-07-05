@@ -1,11 +1,11 @@
 package core.db.users
 
-import base.FixtureTestSuite
 import core.authentication.UserSecretUtils
 import core.authentication.tokenGenerators.SecuredTokenGenerator
 import core.db.users.SqlUserDaoSuite._
 import core.entities.{CredentialSet, SecuredToken, UserID, UserSecret}
 import org.scalatest.Ignore
+import tests.FixtureTestSuite
 
 @Ignore
 class SqlUserDaoSuite extends FixtureTestSuite {
@@ -110,7 +110,7 @@ class SqlUserDaoSuite extends FixtureTestSuite {
     usersDao.deleteUser(user.userId)
 
     val maybeUser = usersDao.findUserByName(USER)
-    val users = usersDao.findUsers()
+    val users     = usersDao.findUsers()
 
     assert(maybeUser.isEmpty)
     assert(users.isEmpty)

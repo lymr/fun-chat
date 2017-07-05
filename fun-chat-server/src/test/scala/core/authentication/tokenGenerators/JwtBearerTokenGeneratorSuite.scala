@@ -1,6 +1,6 @@
 package core.authentication.tokenGenerators
 
-import base.TestSuite
+import tests.TestSuite
 import core.authentication.tokenGenerators.JwtBearerTokenGeneratorSuite._
 import core.entities._
 

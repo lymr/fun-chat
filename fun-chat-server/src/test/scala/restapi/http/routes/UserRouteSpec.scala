@@ -4,7 +4,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import api.entities.UserInformationEntity
-import base.TestWordSpec
+import tests.TestWordSpec
 import core.authentication.tokenGenerators.JwtBearerTokenGenerator
 import core.db.users.UsersDao
 import core.entities.{SecuredToken, _}

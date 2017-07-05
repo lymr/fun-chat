@@ -1,6 +1,6 @@
 package core.entities
 
-import base.TestSuite
+import tests.TestSuite
 import core.entities.TimerSuite._
 import org.joda.time.DateTime
 

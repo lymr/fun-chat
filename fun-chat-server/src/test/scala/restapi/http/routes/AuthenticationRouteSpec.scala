@@ -5,7 +5,6 @@ import akka.http.scaladsl.model.headers.{Authorization, BasicHttpCredentials, OA
 import akka.http.scaladsl.server.MethodRejection
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import api.entities.ClientInformation
-import base.TestWordSpec
 import core.authentication.AuthenticationService
 import core.authentication.tokenGenerators.JwtBearerTokenGenerator
 import core.entities._
@@ -14,6 +13,7 @@ import org.mockito.Mock
 import restapi.http.JsonSupport
 import restapi.http.routes.AuthenticationRouteSpec._
 import spray.json._
+import tests.TestWordSpec
 
 import scala.concurrent.Future
 
@@ -38,94 +38,98 @@ class AuthenticationRouteSpec extends TestWordSpec with ScalatestRouteTest with 
     cleanUp()
   }
 
-  "call to auth without leading path, request is not accepted" in {
-    Post("/auth/") ~> authRoute.route ~> check {
-      handled shouldBe false
-    }
-  }
+  "Authentication route" should {
 
-  "sign in with basic credentials, without client information" in {
-    Post("/auth/signIn") ~> addHeader(Authorization(BasicHttpCredentials(USERNAME, PASSWORD))) ~> authRoute.route ~> check {
-      rejection
+    "call to auth without leading path, request is not accepted" in {
+      Post("/auth/") ~> authRoute.route ~> check {
+        handled shouldBe false
+      }
     }
-  }
 
-  "sign in with wrong method, request rejected" in {
-    val entity = HttpEntity(ContentTypes.`application/json`, CLIENT_INFO.toJson.toString)
-    Get("/auth/signIn", entity) ~> addHeader(Authorization(BasicHttpCredentials(USERNAME, PASSWORD))) ~> authRoute.route ~> check {
-      rejection shouldEqual MethodRejection(HttpMethods.POST)
+    "sign in with basic credentials, without client information" in {
+      Post("/auth/signIn") ~> addHeader(Authorization(BasicHttpCredentials(USERNAME, PASSWORD))) ~> authRoute.route ~> check {
+        rejection
+      }
     }
-  }
 
-  "sign in with basic credentials, with client information, request pass" in {
-    val entity = HttpEntity(ContentTypes.`application/json`, CLIENT_INFO.toJson.toString)
-    Post("/auth/signIn", entity) ~> addHeader(Authorization(BasicHttpCredentials(USERNAME, PASSWORD))) ~> authRoute.route ~> check {
-      verify(mockAuthService, times(1)).signIn(USERNAME, SECRET, CLIENT_INFO)
+    "sign in with wrong method, request rejected" in {
+      val entity = HttpEntity(ContentTypes.`application/json`, CLIENT_INFO.toJson.toString)
+      Get("/auth/signIn", entity) ~> addHeader(Authorization(BasicHttpCredentials(USERNAME, PASSWORD))) ~> authRoute.route ~> check {
+        rejection shouldEqual MethodRejection(HttpMethods.POST)
+      }
     }
-  }
 
-  "sign in with no credentials, request is unauthorized" in {
-    val entity = HttpEntity(ContentTypes.`application/json`, CLIENT_INFO.toJson.toString)
-    Post("/auth/signIn", entity) ~> authRoute.route ~> check {
-      response withStatus StatusCodes.Unauthorized
+    "sign in with basic credentials, with client information, request pass" in {
+      val entity = HttpEntity(ContentTypes.`application/json`, CLIENT_INFO.toJson.toString)
+      Post("/auth/signIn", entity) ~> addHeader(Authorization(BasicHttpCredentials(USERNAME, PASSWORD))) ~> authRoute.route ~> check {
+        verify(mockAuthService, times(1)).signIn(USERNAME, SECRET, CLIENT_INFO)
+      }
     }
-  }
 
-  "sign up with basic credentials, without client information" in {
-    Post("/auth/signUp") ~> addHeader(Authorization(BasicHttpCredentials(USERNAME, PASSWORD))) ~> authRoute.route ~> check {
-      rejection
+    "sign in with no credentials, request is unauthorized" in {
+      val entity = HttpEntity(ContentTypes.`application/json`, CLIENT_INFO.toJson.toString)
+      Post("/auth/signIn", entity) ~> authRoute.route ~> check {
+        response withStatus StatusCodes.Unauthorized
+      }
     }
-  }
 
-  "sign up with basic credentials, with client information, request pass" in {
-    val entity = HttpEntity(ContentTypes.`application/json`, CLIENT_INFO.toJson.toString)
-    Post("/auth/signUp", entity) ~> addHeader(Authorization(BasicHttpCredentials(USERNAME, PASSWORD))) ~> authRoute.route ~> check {
-      verify(mockAuthService, times(1)).signUp(USERNAME, SECRET, CLIENT_INFO)
+    "sign up with basic credentials, without client information" in {
+      Post("/auth/signUp") ~> addHeader(Authorization(BasicHttpCredentials(USERNAME, PASSWORD))) ~> authRoute.route ~> check {
+        rejection
+      }
     }
-  }
 
-  "sign up with no credentials, request is unauthorized" in {
-    val entity = HttpEntity(ContentTypes.`application/json`, CLIENT_INFO.toJson.toString)
-    Post("/auth/signUp", entity) ~> authRoute.route ~> check {
-      response withStatus StatusCodes.Unauthorized
+    "sign up with basic credentials, with client information, request pass" in {
+      val entity = HttpEntity(ContentTypes.`application/json`, CLIENT_INFO.toJson.toString)
+      Post("/auth/signUp", entity) ~> addHeader(Authorization(BasicHttpCredentials(USERNAME, PASSWORD))) ~> authRoute.route ~> check {
+        verify(mockAuthService, times(1)).signUp(USERNAME, SECRET, CLIENT_INFO)
+      }
     }
-  }
 
-  "sign-out user with no token, request is rejected" in {
-    Post("/auth/signOut") ~> authRoute.route ~> check {
-      response withStatus StatusCodes.Unauthorized
+    "sign up with no credentials, request is unauthorized" in {
+      val entity = HttpEntity(ContentTypes.`application/json`, CLIENT_INFO.toJson.toString)
+      Post("/auth/signUp", entity) ~> authRoute.route ~> check {
+        response withStatus StatusCodes.Unauthorized
+      }
     }
-  }
 
-  "sign-out with token, user is signed-out" in {
-    Post("/auth/signOut") ~> addHeader(Authorization(OAuth2BearerToken(TOKEN))) ~> authRoute.route ~> check {
-      verify(mockAuthService).signOut(eq(USER_ID))
+    "sign-out user with no token, request is rejected" in {
+      Post("/auth/signOut") ~> authRoute.route ~> check {
+        response withStatus StatusCodes.Unauthorized
+      }
     }
-  }
 
-  "credentials request without token, request unauthorized" in {
-    Patch("/auth/credentials") ~> addHeader(Authorization(OAuth2BearerToken(TOKEN))) ~> authRoute.route ~> check {
-      handled shouldBe false
+    "sign-out with token, user is signed-out" in {
+      Post("/auth/signOut") ~> addHeader(Authorization(OAuth2BearerToken(TOKEN))) ~> authRoute.route ~> check {
+        verify(mockAuthService).signOut(eq(USER_ID))(any)
+      }
     }
-  }
 
-  "credentials request with wrong method, request is not handled" in {
-    Post("/credentials") ~> addHeader(Authorization(OAuth2BearerToken(TOKEN))) ~> authRoute.route ~> check {
-      rejection shouldEqual MethodRejection(HttpMethods.PATCH)
+    "credentials request without token, request unauthorized" in {
+      Patch("/auth/credentials") ~> addHeader(Authorization(OAuth2BearerToken(TOKEN))) ~> authRoute.route ~> check {
+        handled shouldBe false
+      }
     }
-  }
 
-  "update credentials with no token, request is rejected" in {
-    Patch("/credentials") ~> authRoute.route ~> check {
-      response withStatus StatusCodes.Unauthorized
+    "credentials request with wrong method, request is not handled" in {
+      Post("/credentials") ~> addHeader(Authorization(OAuth2BearerToken(TOKEN))) ~> authRoute.route ~> check {
+        rejection shouldEqual MethodRejection(HttpMethods.PATCH)
+      }
     }
-  }
 
-  "update credentials with valid token, request is processed" in {
-    val entity = HttpEntity(ContentTypes.`application/json`, NEW_PASSWORD)
-    Patch("/credentials", entity) ~> addHeader(Authorization(OAuth2BearerToken(TOKEN))) ~> authRoute.route ~> check {
-      verify(mockAuthService, times(1)).updateCredentials(eq(USER_ID), eq(NEW_SECRET))
+    "update credentials with no token, request is rejected" in {
+      Patch("/credentials") ~> authRoute.route ~> check {
+        response withStatus StatusCodes.Unauthorized
+      }
     }
+
+    "update credentials with valid token, request is processed" in {
+      val entity = HttpEntity(ContentTypes.`application/json`, NEW_PASSWORD)
+      Patch("/credentials", entity) ~> addHeader(Authorization(OAuth2BearerToken(TOKEN))) ~> authRoute.route ~> check {
+        verify(mockAuthService, times(1)).updateCredentials(eq(USER_ID), eq(NEW_SECRET))(any)
+      }
+    }
+
   }
 }
 

@@ -1,6 +1,6 @@
 package core.authentication
 
-import base.TestSuite
+import tests.TestSuite
 import core.authentication.SecretKeyHashUtilsSuite._
 import core.entities.CredentialSet
 import utils.StringUtils.ByteArrayToBase64StringExtensions
