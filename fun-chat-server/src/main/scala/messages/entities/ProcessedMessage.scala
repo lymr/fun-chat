@@ -1,16 +1,11 @@
 package messages.entities
 
-import api.entities.ClientInformation
+import core.entities.User
 
 abstract class ProcessedMessage {
-  val senderName: String
-  val recipientName: String
-  val recipientClientInfo: ClientInformation
+  val sender: User
+  val recipient: User
   val timestamp: Long
 }
 
-case class ProcessedTextMessage(content: String,
-                                senderName: String,
-                                recipientName: String,
-                                recipientClientInfo: ClientInformation,
-                                timestamp: Long)
+case class ProcessedTextMessage(content: String, sender: User, recipient: User, timestamp: Long) extends ProcessedMessage

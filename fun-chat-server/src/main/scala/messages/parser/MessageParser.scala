@@ -2,8 +2,10 @@ package messages.parser
 
 import com.typesafe.scalalogging.StrictLogging
 import messages.parser.MessageConstants._
+import messages.parser.error._
 import utils.StringUtils._
 
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.parsing.combinator.{JavaTokenParsers, PackratParsers}
 
 object MessageConstants {
@@ -38,12 +40,18 @@ class MessageParser extends JavaTokenParsers with PackratParsers with StrictLogg
     case subjects ~ content => Send(content, subjects)
   }
 
-  def parse(text: String): Option[Operation] = {
+  def parse(text: String)(implicit ec: ExecutionContext): Future[Operation] = Future {
     val parsedResult = parseAll(sendOperation, text)
     parsedResult match {
-      case Success(r, n)  => Some(r)
-      case Failure(ex, n) => logger.error("Failed parsing message.", ex); None
-      case Error(ex, n)   => logger.error("An Error occurred while parsing message", ex); None
+      case Success(r, _)  => r
+
+      case Failure(cause, _) =>
+        logger.error("ParsingError: Failed parsing message.", cause)
+        throw new MessageParsingFailure(s"Failed parsing message, Cause:= $cause")
+
+      case Error(cause, _)   =>
+        logger.error("ParsingError: An Error occurred while parsing message", cause)
+        throw new MessageParsingError(s"An Error occurred while parsing message, Cause:= $cause")
     }
   }
 }

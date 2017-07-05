@@ -1,75 +1,71 @@
 package messages
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import akka.stream.ActorMaterializer
-import api.entities.ClientInformation
-import core.entities.{User, UserID}
+import api.entities.{MessageEntity, MessageProcessingCodes, MessageProcessingResponse}
+import core.db.users.UsersDao
+import core.entities.User
 import messages.MessageProcessor._
 import messages.entities._
-import messages.parser.{MessageGenerator, TranslationError}
+import messages.parser.MessageGenerator
+import messages.parser.error.{MessageParsingError, MessageParsingFailure, RecipientsListEmptyException}
 
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.ExecutionContext
 
-class MessageProcessor(ctx: MessageProcessorContext)(implicit materializer: ActorMaterializer)
+class MessageProcessor(messageGenerator: MessageGenerator, usersDao: UsersDao)(implicit ec: ExecutionContext)
     extends Actor with ActorLogging {
 
   override def receive: Receive = {
-    case msg: ForwardRawMessage => processRawMessage(msg)
+    case msg: ForwardRawMessage => processRawMessage(msg, sender)
   }
 
-  private def processRawMessage(rawMessage: ForwardRawMessage): Unit = {
+  private def processRawMessage(rawMessage: ForwardRawMessage, replyTo: ActorRef): Unit = {
+    messageGenerator
+      .generate(rawMessage.message.content, rawMessage.sender.name, rawMessage.message.timestamp)
+      .map {
+        case text: TextMessage =>
+          processTextMessage(text, rawMessage.sender)
+          MessageProcessingResponse(MessageProcessingCodes.OK)
 
-    def dispatchMessage(message: Message): Unit = {
-      val triedProcessing = Try {
-        message match {
-          case text: TextMessage => processTextMessage(text)
-          case _: MediaMessage   => // TODO: Add support for media message
-        }
+        case _: MediaMessage => // TODO: Add support for media message
+          MessageProcessingResponse(MessageProcessingCodes.NotSupported, "Media message not supported! yet.")
       }
-
-      triedProcessing match {
-        case Success(_) => sender() ! ProcessingDone
-        case Failure(ex) =>
-          log.error(s"Failed processing message $rawMessage with error :=", ex)
-          sender() ! ProcessingFailure("Failed to process message.")
-      }
-    }
-
-    def reportTranslationError(error: TranslationError): Unit = {
-      sender() ! ProcessingFailure(error.cause)
-    }
-
-    ctx.messageGenerator
-      .generate(rawMessage.message.content, rawMessage.senderCtx.username, rawMessage.message.timestamp)
-      .fold(dispatchMessage, reportTranslationError)
+      .recover(messageProcessingErrorHandler)
+      .foreach(replyTo ! _)
   }
 
-  private def processTextMessage(message: TextMessage): Unit = {
+  private def processTextMessage(message: TextMessage, user: User): Unit = {
     val processedMessages = for {
-      recipientName       <- message.recipients
-      recipientUser       <- ctx.findRecipientByName(recipientName)
-      recipientClientInfo <- ctx.findRecipientInfo(recipientUser.userId)
-      processedMessage = ProcessedTextMessage(message.content,
-                                              message.sender,
-                                              recipientName,
-                                              recipientClientInfo,
-                                              message.timestamp)
+      recipientName <- message.recipients
+      recipientUser <- usersDao.findUserByName(recipientName)
+      processedMessage = ProcessedTextMessage(message.content, user, recipientUser, message.timestamp)
     } yield processedMessage
 
     processedMessages.foreach { msg =>
-      //TODO: Messengers should be in a pool !!! - no need to manage errors, - attachment should have different pool (or allow only ~50% of workers to handle 'heavy' operations)
-      val messenger: ActorRef = context.actorOf(Messenger.props())
-      messenger ! DeliverTextMessage(msg)
+      //TODO: messenger ! DeliverTextMessage(msg)
     }
+  }
+
+  private def messageProcessingErrorHandler: PartialFunction[Throwable, MessageProcessingResponse] = {
+    case ex: MessageParsingFailure =>
+      MessageProcessingResponse(MessageProcessingCodes.ParsingFailure, ex.getMessage)
+
+    case ex: MessageParsingError =>
+      MessageProcessingResponse(MessageProcessingCodes.ParsingError, ex.getMessage)
+
+    case ex: RecipientsListEmptyException =>
+      MessageProcessingResponse(MessageProcessingCodes.NoRecipientsFailure, ex.getMessage)
+
+    case ex: Exception =>
+      MessageProcessingResponse(MessageProcessingCodes.GenerationError, ex.getMessage)
   }
 }
 
 object MessageProcessor {
 
-  case class MessageProcessorContext(messageGenerator: MessageGenerator,
-                                     findRecipientByName: String => Option[User],
-                                     findRecipientInfo: UserID => Option[ClientInformation])
+  def props(messageGenerator: MessageGenerator, usersDao: UsersDao)(
+      implicit processingDispatcher: ExecutionContext): Props =
+    Props(new MessageProcessor(messageGenerator, usersDao))
 
-  def props(ctx: MessageProcessorContext)(implicit materializer: ActorMaterializer): Props =
-    Props(new MessageProcessor(ctx))
+  case class DeliverRawMessage(message: MessageEntity)
+  case class ForwardRawMessage(message: MessageEntity, sender: User)
 }
