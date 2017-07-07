@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import authentication.AuthenticatorSuite._
 import authentication.entities._
-import base.TestWordSpec
+import tests.TestWordSpec
 import org.mockito.Mock
 import org.scalatest.concurrent.Eventually
 import rest.client.RestClient

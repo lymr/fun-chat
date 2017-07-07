@@ -5,6 +5,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, OverflowStrategy, QueueOfferResult}
+import rest.client.HttpRequestQueue._
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
@@ -26,19 +27,26 @@ trait HttpRequestQueue {
       .queue[(HttpRequest, Promise[HttpResponse])](QueueSize, OverflowStrategy.backpressure)
       .via(poolClientFlow)
       .toMat(Sink.foreach({
-        case ((Success(resp), p)) => p.success(resp)
-        case ((Failure(e), p))    => p.failure(e)
+        case ((Success(httpResponse), promisedResponse)) => promisedResponse.success(httpResponse)
+        case ((Failure(throwable), promisedResponse))    => promisedResponse.failure(throwable)
       }))(Keep.left)
       .run()
 
   def queueRequest(request: HttpRequest): Future[HttpResponse] = {
     val responsePromise = Promise[HttpResponse]()
-    queue.offer(request -> responsePromise).flatMap {
-      case QueueOfferResult.Enqueued    => responsePromise.future
-      case QueueOfferResult.Dropped     => Future.failed(new RuntimeException("Queue overflowed. Try again later."))
-      case QueueOfferResult.Failure(ex) => Future.failed(ex)
-      case QueueOfferResult.QueueClosed => Future.failed(new RuntimeException("Queue was closed (pool shut down) while running the request. Try again later."))
-    }
+    queue
+      .offer(request -> responsePromise)
+      .map {
+        case QueueOfferResult.Enqueued    => responsePromise
+        case QueueOfferResult.Dropped     => responsePromise.failure(new RuntimeException(QUEUE_OVERFLOW))
+        case QueueOfferResult.QueueClosed => responsePromise.failure(new RuntimeException(QUEUE_CLOSED))
+        case QueueOfferResult.Failure(ex) => responsePromise.failure(ex)
+      }
+      .flatMap(_.future)
   }
+}
 
+object HttpRequestQueue {
+  private val QUEUE_OVERFLOW: String = "Queue overflowed. Try again later."
+  private val QUEUE_CLOSED: String   = "Queue was closed (pool shut down) while running the request. Try again later."
 }

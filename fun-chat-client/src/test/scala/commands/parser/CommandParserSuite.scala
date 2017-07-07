@@ -1,6 +1,6 @@
 package commands.parser
 
-import base.TestSuite
+import tests.TestSuite
 
 class CommandParserSuite extends TestSuite {
 

@@ -12,7 +12,6 @@ import api.entities.{ClientInformation, UserInformationEntity}
 import authentication.AuthTokenStore
 import authentication.entities.AuthToken
 import com.typesafe.scalalogging.StrictLogging
-import rest.client.support.ClientInformationHelper._
 import rest.client.support.JsonSupport
 import spray.json._
 import utils.Configuration
@@ -20,7 +19,6 @@ import utils.Configuration
 import scala.collection.immutable._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 
-//TODO: Send / Receive message should be done using a socket.
 class HttpRestClient(config: Configuration)(implicit val system: ActorSystem, val mat: ActorMaterializer)
   extends RestClient
     with HttpRequestQueue
@@ -37,7 +35,7 @@ class HttpRestClient(config: Configuration)(implicit val system: ActorSystem, va
   private val serverUri: Uri =
     Uri().withScheme("http").withHost(config.defaultSeverHost).withPort(config.defaultSeverPort)
 
-  private val clientInformation = ClientInformation(config.clientVersion, ClientIpAddress)
+  private val clientInformation = ClientInformation(config.clientVersion)
 
   private val originHeader: Origin = Origin(HttpOrigin("http", Host("fun-chat", config.defaultSeverPort)))
 
