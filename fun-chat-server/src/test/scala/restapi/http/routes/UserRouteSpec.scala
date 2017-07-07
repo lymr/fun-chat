@@ -4,16 +4,16 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import api.entities.UserInformationEntity
-import tests.TestWordSpec
 import core.authentication.tokenGenerators.JwtBearerTokenGenerator
 import core.db.users.UsersDao
+import core.entities.UserInformationEntityConverters._
 import core.entities.{SecuredToken, _}
 import org.joda.time.DateTime
 import org.mockito.Mock
 import restapi.http.JsonSupport
 import restapi.http.routes.UserRouteSpec._
 import scalikejdbc.DBSession
-import UserInformationEntityConverters._
+import tests.TestWordSpec
 
 import scala.concurrent.Future
 
@@ -93,11 +93,14 @@ private object UserRouteSpec {
   val USER_1    = "user-1"
   val USER_2    = "user-2"
 
-  val USERS                  = Seq(User(USER_ID_1, USER_1, DateTime.now), User(USER_ID_2, USER_2, DateTime.now))
-  val SECURED_TOKEN          = SecuredToken("test-secret".toCharArray.map(_.toByte))
+  val USERS         = Seq(User(USER_ID_1, USER_1, DateTime.now), User(USER_ID_2, USER_2, DateTime.now))
+  val SECURED_TOKEN = SecuredToken("test-secret".toCharArray.map(_.toByte))
+
+  val SESSION_ID_1 = SessionID("session-1")
+  val SESSION_ID_2 = SessionID("session-2")
   val BEARER_TOKEN_GENERATOR = new JwtBearerTokenGenerator(() => SECURED_TOKEN, Timer(180))
-  val TOKEN_1: String        = BEARER_TOKEN_GENERATOR.create(AuthTokenContext(USER_ID_1, USER_1)).get.token
-  val TOKEN_2: String        = BEARER_TOKEN_GENERATOR.create(AuthTokenContext(USER_ID_2, USER_2)).get.token
+  val TOKEN_1: String = BEARER_TOKEN_GENERATOR.create(AuthTokenClaims(USER_ID_1, USER_1, SESSION_ID_1)).get.token
+  val TOKEN_2: String = BEARER_TOKEN_GENERATOR.create(AuthTokenClaims(USER_ID_2, USER_2, SESSION_ID_2)).get.token
 
   val userByName: (String) => Option[User] = {
     case USER_1 => Some(User(USER_ID_1, USER_1, DateTime.now))
@@ -106,7 +109,8 @@ private object UserRouteSpec {
   }
 
   val authenticate: AuthToken => Future[Option[AuthTokenContext]] = {
-    case (bearer: BearerToken) => Future.successful(BEARER_TOKEN_GENERATOR.decode(bearer))
-    case _                     => Future.failed(new IllegalArgumentException("Unsupported AuthToken."))
+    case (bearer: BearerToken) =>
+      Future.successful(BEARER_TOKEN_GENERATOR.decode(bearer).map(c => AuthTokenContext(c.userId, c.username)))
+    case _ => Future.failed(new IllegalArgumentException("Unsupported AuthToken."))
   }
 }

@@ -2,7 +2,6 @@ package restapi.http.routes
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.ActorRef
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
@@ -10,23 +9,20 @@ import akka.http.scaladsl.server.{InvalidOriginRejection, MissingHeaderRejection
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.testkit.TestProbe
 import api.entities.ClientInformation
-import base.TestWordSpec
 import core.authentication.AuthenticationService
 import core.db.DatabaseContext
-import core.db.clients.ConnectedClientsStore
 import org.mockito.Mock
 import restapi.http.JsonSupport
 import restapi.http.routes.HttpRouterSpec._
 import restapi.http.routes.support.AllowedOrigins._
 import spray.json._
+import tests.TestWordSpec
 import utils.Configuration
+import websocket.WebSocketHandler
 
 import scala.concurrent.duration.FiniteDuration
 
 class HttpRouterSpec extends TestWordSpec with ScalatestRouteTest with JsonSupport {
-
-  val probe: TestProbe    = TestProbe()
-  val mockActor: ActorRef = probe.ref
 
   @Mock
   private var mockConfiguration: Configuration = _
@@ -38,14 +34,18 @@ class HttpRouterSpec extends TestWordSpec with ScalatestRouteTest with JsonSuppo
   private var authService: AuthenticationService = _
 
   @Mock
-  private var connectedClientsStore: ConnectedClientsStore = _
+  private var mockWebSocketHandler: WebSocketHandler = _
+
+  private val messageRouterProbe: TestProbe = TestProbe()
+
+  private val connectedClinetsStoreProbe: TestProbe = TestProbe()
 
   private var httpRouter: HttpRouter = _
 
   override def beforeEach(): Unit = {
     super.beforeEach()
     when(mockConfiguration.messageTimeout).thenReturn(FiniteDuration(5, TimeUnit.SECONDS))
-    httpRouter = new HttpRouter(dbContext, authService, connectedClientsStore, mockActor, mockConfiguration)
+    httpRouter = new HttpRouter(dbContext, authService, mockWebSocketHandler, messageRouterProbe.ref, mockConfiguration)
   }
 
   override def afterEach(): Unit = {
@@ -59,7 +59,8 @@ class HttpRouterSpec extends TestWordSpec with ScalatestRouteTest with JsonSuppo
         `Access-Control-Allow-Origin`(HttpOriginRange.Default(allowedOrigins)),
         `Access-Control-Allow-Credentials`(allow = true),
         `Access-Control-Allow-Methods`(GET, POST, PATCH, DELETE),
-        `Access-Control-Allow-Headers`("Authorization", "Content-Type", "X-Requested-With"))
+        `Access-Control-Allow-Headers`("Authorization", "Content-Type", "X-Requested-With")
+      )
     }
   }
 
@@ -105,5 +106,5 @@ class HttpRouterSpec extends TestWordSpec with ScalatestRouteTest with JsonSuppo
 object HttpRouterSpec {
   val USERNAME    = "username-1"
   val PASSWORD    = "p@ssword"
-  val CLIENT_INFO = ClientInformation("v1.0", "10.1.1.138")
+  val CLIENT_INFO = ClientInformation("v1.0")
 }

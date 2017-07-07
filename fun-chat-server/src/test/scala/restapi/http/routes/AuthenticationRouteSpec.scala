@@ -62,7 +62,7 @@ class AuthenticationRouteSpec extends TestWordSpec with ScalatestRouteTest with 
     "sign in with basic credentials, with client information, request pass" in {
       val entity = HttpEntity(ContentTypes.`application/json`, CLIENT_INFO.toJson.toString)
       Post("/auth/signIn", entity) ~> addHeader(Authorization(BasicHttpCredentials(USERNAME, PASSWORD))) ~> authRoute.route ~> check {
-        verify(mockAuthService, times(1)).signIn(USERNAME, SECRET, CLIENT_INFO)
+        verify(mockAuthService, times(1)).signIn(USERNAME, SECRET)
       }
     }
 
@@ -82,7 +82,7 @@ class AuthenticationRouteSpec extends TestWordSpec with ScalatestRouteTest with 
     "sign up with basic credentials, with client information, request pass" in {
       val entity = HttpEntity(ContentTypes.`application/json`, CLIENT_INFO.toJson.toString)
       Post("/auth/signUp", entity) ~> addHeader(Authorization(BasicHttpCredentials(USERNAME, PASSWORD))) ~> authRoute.route ~> check {
-        verify(mockAuthService, times(1)).signUp(USERNAME, SECRET, CLIENT_INFO)
+        verify(mockAuthService, times(1)).signUp(USERNAME, SECRET)
       }
     }
 
@@ -101,7 +101,7 @@ class AuthenticationRouteSpec extends TestWordSpec with ScalatestRouteTest with 
 
     "sign-out with token, user is signed-out" in {
       Post("/auth/signOut") ~> addHeader(Authorization(OAuth2BearerToken(TOKEN))) ~> authRoute.route ~> check {
-        verify(mockAuthService).signOut(eq(USER_ID))(any)
+        verify(mockAuthService).signOut(eq(USER_ID))
       }
     }
 
@@ -144,9 +144,8 @@ private object AuthenticationRouteSpec {
   val CLIENT_INFO   = ClientInformation("v1.0")
   val SECURED_TOKEN = SecuredToken("test-secret".toCharArray.map(_.toByte))
 
-  val BEARER_TOKEN_GENERATOR =
-    new JwtBearerTokenGenerator(() => SECURED_TOKEN, Timer(180))
-  val TOKEN: String = BEARER_TOKEN_GENERATOR.create(AuthTokenContext(USER_ID, USERNAME)).get.token
+  val BEARER_TOKEN_GENERATOR = new JwtBearerTokenGenerator(() => SECURED_TOKEN, Timer(180))
+  val TOKEN: String = BEARER_TOKEN_GENERATOR.create(AuthTokenClaims(USER_ID, USERNAME, SessionID("test-session-id"))).get.token
 
   val userByName: String => Option[User] = {
     case USERNAME => Some(User(USER_ID, USERNAME, DateTime.now))
@@ -154,7 +153,7 @@ private object AuthenticationRouteSpec {
   }
 
   val authenticate: AuthToken => Future[Option[AuthTokenContext]] = {
-    case (bearer: BearerToken) => Future.successful(BEARER_TOKEN_GENERATOR.decode(bearer))
+    case (bearer: BearerToken) => Future.successful(BEARER_TOKEN_GENERATOR.decode(bearer).map(c => AuthTokenContext(c.userId, c.username)))
     case _                     => Future.failed(new IllegalArgumentException("Unsupported AuthToken."))
   }
 }

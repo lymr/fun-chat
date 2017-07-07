@@ -26,7 +26,7 @@ class JwtBearerTokenGenerator(keyGenerator: () => SecuredToken, timer: Timer)
         .withExpiresAt(timestamp.next)
         .withClaim("uid", claims.userId.toJson.toString)
         .withClaim("unm", claims.username)
-        .withClaim("otc", claims.sessionId.toJson.toString())
+        .withClaim("otc", claims.sessionId.toJson.toString)
         .sign(Algorithm.HMAC512(secretKey))
     }
 
@@ -39,7 +39,7 @@ class JwtBearerTokenGenerator(keyGenerator: () => SecuredToken, timer: Timer)
   def decode(bearer: BearerToken): Option[AuthTokenClaims] = {
     verify(bearer)
       .map {
-        case (jwt: DecodedJWT) => Seq(jwt.getClaim("uid").asString, jwt.getClaim("unm").asString, jwt.getClaim("otc"))
+        case (jwt: DecodedJWT) => Seq(jwt.getClaim("uid").asString, jwt.getClaim("unm").asString, jwt.getClaim("otc").asString)
       }
       .map {
         case Seq(jsId: String, username: String, sessionId: String) =>
@@ -47,7 +47,6 @@ class JwtBearerTokenGenerator(keyGenerator: () => SecuredToken, timer: Timer)
       }
   }
 
-  //TODO: don't create new token, just update expiration time. Add one time token claim store, update on touch.
   def touch(bearer: BearerToken): Option[BearerToken] = {
     decode(bearer) match {
       case Some(claims) => create(claims)

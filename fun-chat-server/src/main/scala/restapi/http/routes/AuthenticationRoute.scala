@@ -8,7 +8,7 @@ import core.entities.UserSecret
 import restapi.http.JsonSupport
 import restapi.http.routes.support._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class AuthenticationRoute(authService: AuthenticationService)(implicit ec: ExecutionContext, ac: ApiContext)
     extends Directives with SecuredAccessSupport with ContentExtractionSupport with JsonSupport {
@@ -20,7 +20,7 @@ class AuthenticationRoute(authService: AuthenticationService)(implicit ec: Execu
           extractClientInfo { clientInfo =>
             extractCredentials {
               case Some(BasicHttpCredentials(username, password)) =>
-                complete(authService.signIn(username, UserSecret(password), clientInfo))
+                complete(Future(authService.signIn(username, UserSecret(password))))
               case _ => complete(StatusCodes.Unauthorized)
             }
           }
@@ -31,7 +31,7 @@ class AuthenticationRoute(authService: AuthenticationService)(implicit ec: Execu
             extractClientInfo { clientInfo =>
               extractCredentials {
                 case Some(BasicHttpCredentials(username, password)) =>
-                  complete(authService.signUp(username, UserSecret(password), clientInfo))
+                  complete(Future(authService.signUp(username, UserSecret(password))))
                 case _ => complete(StatusCodes.Unauthorized)
               }
             }
@@ -40,7 +40,8 @@ class AuthenticationRoute(authService: AuthenticationService)(implicit ec: Execu
         path("signOut") {
           securedAccess { ctx =>
             post {
-              complete(authService.signOut(ctx.userId))
+              Future(authService.signOut(ctx.userId))
+              complete(StatusCodes.Accepted)
             }
           }
         }
@@ -54,5 +55,4 @@ class AuthenticationRoute(authService: AuthenticationService)(implicit ec: Execu
           }
         }
       }
-
 }

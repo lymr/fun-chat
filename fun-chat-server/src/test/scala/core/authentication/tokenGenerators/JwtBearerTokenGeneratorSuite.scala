@@ -1,8 +1,8 @@
 package core.authentication.tokenGenerators
 
-import tests.TestSuite
 import core.authentication.tokenGenerators.JwtBearerTokenGeneratorSuite._
 import core.entities._
+import tests.TestSuite
 
 class JwtBearerTokenGeneratorSuite extends TestSuite {
 
@@ -15,54 +15,44 @@ class JwtBearerTokenGeneratorSuite extends TestSuite {
   }
 
   test("creating token, token is defined") {
-    val ctx = AuthTokenContext(USER_ID, USER_NAME)
+    val claims = AuthTokenClaims(USER_ID, USER_NAME, SESSION_ID)
 
-    val token = tokenGenerator(TIMER).create(ctx)
+    val token = tokenGenerator(TIMER).create(claims)
 
     assert(token.isDefined)
   }
 
   test("decoding token, context is returned correctly") {
     val generator = tokenGenerator(TIMER)
-    val ctx       = AuthTokenContext(USER_ID, USER_NAME)
-    val token     = generator.create(ctx)
+    val claims    = AuthTokenClaims(USER_ID, USER_NAME, SESSION_ID)
+    val token     = generator.create(claims)
 
     val result = generator.decode(token.get)
 
     assert(result.isDefined)
-    assertResult(ctx)(result.get)
-  }
-
-  test("verifying token, is OK") {
-    val generator = tokenGenerator(TIMER)
-    val ctx       = AuthTokenContext(USER_ID, USER_NAME)
-    val token     = generator.create(ctx)
-
-    val result = generator.isValid(token.get)
-
-    assert(result)
+    assertResult(claims)(result.get)
   }
 
   test("token issue date is before current time minus expiration interval, token invalid") {
     val testableTimer = new TestableTimer(System.currentTimeMillis - EXPIRATION * 3 * 1000, EXPIRATION)
-    val generator     = tokenGenerator(testableTimer)
-    val ctx           = AuthTokenContext(USER_ID, USER_NAME)
-    val token         = generator.create(ctx)
+    val generator = tokenGenerator(testableTimer)
+    val claims    = AuthTokenClaims(USER_ID, USER_NAME, SESSION_ID)
+    val token     = generator.create(claims)
 
-    val result = generator.isValid(token.get)
+    val result = generator.decode(token.get)
 
-    assert(!result)
+    assert(result.isEmpty)
   }
 
   test("token expiration date is after current time plus expiration interval, token invalid") {
     val testableTimer = new TestableTimer(System.currentTimeMillis + EXPIRATION * 3 * 1000, EXPIRATION)
-    val generator     = tokenGenerator(testableTimer)
-    val ctx           = AuthTokenContext(USER_ID, USER_NAME)
-    val token         = generator.create(ctx)
+    val generator = tokenGenerator(testableTimer)
+    val claims    = AuthTokenClaims(USER_ID, USER_NAME, SESSION_ID)
+    val token     = generator.create(claims)
 
-    val result = generator.isValid(token.get)
+    val result = generator.decode(token.get)
 
-    assert(!result)
+    assert(result.isEmpty)
   }
 
   class TestableTimer(timestamp: Long, intervalStep: Long) extends Timer(intervalStep) {
@@ -71,9 +61,10 @@ class JwtBearerTokenGeneratorSuite extends TestSuite {
 }
 
 object JwtBearerTokenGeneratorSuite {
-  private val USER_ID           = UserID("user-id-xx")
-  private val USER_NAME: String = "test-user"
-  private val EXPIRATION: Long  = 120
-  private val TIMER             = Timer(EXPIRATION)
-  private val SECRET_KEY        = SecuredToken("^fun-ch@t-test-sec7et-k3y!".toCharArray.map(_.toByte))
+  private val USER_ID: UserID          = UserID("user-id-xx")
+  private val USER_NAME: String        = "test-user"
+  private val SESSION_ID: SessionID    = SessionID("test-session-id")
+  private val EXPIRATION: Long         = 120
+  private val TIMER: Timer             = Timer(EXPIRATION)
+  private val SECRET_KEY: SecuredToken = SecuredToken("^fun-ch@t-test-sec7et-k3y!".toCharArray.map(_.toByte))
 }
