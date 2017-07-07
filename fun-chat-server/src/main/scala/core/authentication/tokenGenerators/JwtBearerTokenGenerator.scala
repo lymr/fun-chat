@@ -4,18 +4,18 @@ import com.auth0.jwt._
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.DecodedJWT
 import com.typesafe.scalalogging.StrictLogging
+import core.authentication.support.AuthenticationJsonSupport
 import core.entities._
-import restapi.http.JsonSupport
 import spray.json._
 
 import scala.util.{Failure, Success, Try}
 
 class JwtBearerTokenGenerator(keyGenerator: () => SecuredToken, timer: Timer)
-    extends BearerTokenGenerator with JsonSupport with StrictLogging {
+    extends BearerTokenGenerator with AuthenticationJsonSupport with StrictLogging {
 
   private val secretKey = keyGenerator().token
 
-  def create(ctx: AuthTokenContext): Option[BearerToken] = {
+  def create(claims: AuthTokenClaims): Option[BearerToken] = {
     val triedToken = Try {
       val timestamp = timer.freeze
       JWT
@@ -24,8 +24,9 @@ class JwtBearerTokenGenerator(keyGenerator: () => SecuredToken, timer: Timer)
         .withSubject("auth-bearer")
         .withIssuedAt(timestamp.take)
         .withExpiresAt(timestamp.next)
-        .withClaim("uid", ctx.userId.toJson.toString)
-        .withClaim("unm", ctx.username)
+        .withClaim("uid", claims.userId.toJson.toString)
+        .withClaim("unm", claims.username)
+        .withClaim("otc", claims.sessionId.toJson.toString())
         .sign(Algorithm.HMAC512(secretKey))
     }
 
@@ -35,24 +36,23 @@ class JwtBearerTokenGenerator(keyGenerator: () => SecuredToken, timer: Timer)
     }
   }
 
-  def decode(bearer: BearerToken): Option[AuthTokenContext] = {
-    verify(bearer).map {
-      case (jwt: DecodedJWT) => Seq(jwt.getClaim("uid").asString, jwt.getClaim("unm").asString)
-    }.map {
-      case Seq(jsId: String, username: String) => AuthTokenContext(jsId.parseJson.convertTo[UserID], username)
-    }
+  def decode(bearer: BearerToken): Option[AuthTokenClaims] = {
+    verify(bearer)
+      .map {
+        case (jwt: DecodedJWT) => Seq(jwt.getClaim("uid").asString, jwt.getClaim("unm").asString, jwt.getClaim("otc"))
+      }
+      .map {
+        case Seq(jsId: String, username: String, sessionId: String) =>
+          AuthTokenClaims(jsId.parseJson.convertTo[UserID], username, sessionId.parseJson.convertTo[SessionID])
+      }
   }
 
   //TODO: don't create new token, just update expiration time. Add one time token claim store, update on touch.
   def touch(bearer: BearerToken): Option[BearerToken] = {
     decode(bearer) match {
-      case Some(user) => create(user)
-      case _          => None
+      case Some(claims) => create(claims)
+      case _            => None
     }
-  }
-
-  def isValid(bearer: BearerToken): Boolean = {
-    verify(bearer).isDefined
   }
 
   private def verify(bearer: BearerToken): Option[DecodedJWT] = {

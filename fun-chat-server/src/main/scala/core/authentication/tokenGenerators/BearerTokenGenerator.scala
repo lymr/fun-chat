@@ -1,6 +1,6 @@
 package core.authentication.tokenGenerators
 
-import core.entities.{AuthTokenContext, BearerToken}
+import core.entities.{AuthTokenClaims, BearerToken}
 
 /**
   * OAuth2 Bearer token generator.
@@ -13,14 +13,14 @@ trait BearerTokenGenerator {
     * @param ctx Given TokenContext
     * @return Authentication token
     */
-  def create(ctx: AuthTokenContext): Option[BearerToken]
+  def create(ctx: AuthTokenClaims): Option[BearerToken]
 
   /**
     * Decodes given Authentication token and extracts underlying user information.
     * @param bearer Given token
     * @return Token information
     */
-  def decode(bearer: BearerToken): Option[AuthTokenContext]
+  def decode(bearer: BearerToken): Option[AuthTokenClaims]
 
   /**
     * Extends token expiration timestamp with
@@ -28,11 +28,4 @@ trait BearerTokenGenerator {
     * @return Authentication token
     */
   def touch(bearer: BearerToken): Option[BearerToken]
-
-  /**
-    * Checks whether given token is valid.
-    * @param bearer Given token
-    * @return True if token validated correctly, otherwise False
-    */
-  def isValid(bearer: BearerToken): Boolean
 }

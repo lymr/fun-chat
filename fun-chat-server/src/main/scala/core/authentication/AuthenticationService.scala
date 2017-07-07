@@ -2,19 +2,14 @@ package core.authentication
 
 import akka.Done
 import akka.actor.ActorRef
-import akka.pattern.ask
-import akka.util.Timeout
 import api.entities.ClientInformation
 import core.db.users.UsersDao
 import core.entities._
-import websocket.ConnectedClientsStore.{ClientStoreResponse, _}
+import websocket.ConnectedClientsStore._
 
-import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 class AuthenticationService(authenticator: UserAuthenticator, dao: UsersDao, connectedClientsStore: ActorRef) {
-
-  implicit val askTimeout: Timeout = 2 seconds
 
   def signIn(username: String, password: UserSecret, info: ClientInformation)
             (implicit ec: ExecutionContext): Future[Option[AuthToken]] = Future {
@@ -40,20 +35,12 @@ class AuthenticationService(authenticator: UserAuthenticator, dao: UsersDao, con
 
   def signOut(userId: UserID)(implicit ec: ExecutionContext): Future[Done] = Future {
     connectedClientsStore ! ClientDisconnected(userId)
+    authenticator.revokeToken(userId)
     Done
   }
 
-  def authorize(token: AuthToken)(implicit ec: ExecutionContext): Future[Option[AuthTokenContext]] = {
-    Future(authenticator.validateToken(token)).flatMap {
-      case Some(userAuthContext) =>
-        (connectedClientsStore ? ValidateUserClaims(userAuthContext))
-          .mapTo[ClientStoreResponse]
-          .map {
-            case ClaimsValid                    => Some(userAuthContext)
-            case ClaimsInvalid | ClientNotFound => None
-          }
-      case None => Future.successful(None)
-    }
+  def authorize(token: AuthToken)(implicit ec: ExecutionContext): Future[Option[AuthTokenContext]] = Future {
+    authenticator.validateToken(token)
   }
 
   def updateCredentials(userId: UserID, newSecret: UserSecret)

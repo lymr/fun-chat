@@ -2,47 +2,32 @@ package messages
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import api.entities.{MessageEntity, MessageProcessingCodes, MessageProcessingResponse}
-import core.db.users.UsersDao
-import core.entities.User
+import core.entities.AuthTokenContext
 import messages.MessageProcessor._
+import messages.Messenger.DeliverTextMessage
 import messages.entities._
 import messages.parser.MessageGenerator
 import messages.parser.error.{MessageParsingError, MessageParsingFailure, RecipientsListEmptyException}
 
-import scala.concurrent.ExecutionContext
-
-class MessageProcessor(messageGenerator: MessageGenerator, usersDao: UsersDao)(implicit ec: ExecutionContext)
-    extends Actor with ActorLogging {
+class MessageProcessor(messageGenerator: MessageGenerator, messenger: ActorRef) extends Actor with ActorLogging {
 
   override def receive: Receive = {
-    case msg: ForwardRawMessage => processRawMessage(msg, sender)
+    case rawMessage: ForwardRawMessage => processRawMessage(rawMessage)
   }
 
-  private def processRawMessage(rawMessage: ForwardRawMessage, replyTo: ActorRef): Unit = {
+  private def processRawMessage(rawMessage: ForwardRawMessage): Unit = {
     messageGenerator
-      .generate(rawMessage.message.content, rawMessage.sender.name, rawMessage.message.timestamp)
+      .generate(rawMessage.message.content, rawMessage.userContext.username, rawMessage.message.timestamp)
       .map {
         case text: TextMessage =>
-          processTextMessage(text, rawMessage.sender)
+          messenger ! DeliverTextMessage(text, rawMessage.userContext)
           MessageProcessingResponse(MessageProcessingCodes.OK)
 
         case _: MediaMessage => // TODO: Add support for media message
           MessageProcessingResponse(MessageProcessingCodes.NotSupported, "Media message not supported! yet.")
       }
       .recover(messageProcessingErrorHandler)
-      .foreach(replyTo ! _)
-  }
-
-  private def processTextMessage(message: TextMessage, user: User): Unit = {
-    val processedMessages = for {
-      recipientName <- message.recipients
-      recipientUser <- usersDao.findUserByName(recipientName)
-      processedMessage = ProcessedTextMessage(message.content, user, recipientUser, message.timestamp)
-    } yield processedMessage
-
-    processedMessages.foreach { msg =>
-      //TODO: messenger ! DeliverTextMessage(msg)
-    }
+      .foreach(sender ! _)
   }
 
   private def messageProcessingErrorHandler: PartialFunction[Throwable, MessageProcessingResponse] = {
@@ -62,10 +47,9 @@ class MessageProcessor(messageGenerator: MessageGenerator, usersDao: UsersDao)(i
 
 object MessageProcessor {
 
-  def props(messageGenerator: MessageGenerator, usersDao: UsersDao)(
-      implicit processingDispatcher: ExecutionContext): Props =
-    Props(new MessageProcessor(messageGenerator, usersDao))
+  def props(messageGenerator: MessageGenerator, messenger: ActorRef): Props =
+    Props(new MessageProcessor(messageGenerator, messenger))
 
   case class DeliverRawMessage(message: MessageEntity)
-  case class ForwardRawMessage(message: MessageEntity, sender: User)
+  case class ForwardRawMessage(message: MessageEntity, userContext: AuthTokenContext)
 }

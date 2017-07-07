@@ -5,7 +5,6 @@ import akka.http.scaladsl.server.{Directives, Route}
 import akka.pattern.ask
 import akka.util.Timeout
 import api.entities.{MessageEntity, MessageProcessingCodes, MessageProcessingResponse}
-import core.db.users.UsersDao
 import core.entities.AuthTokenContext
 import messages.MessageProcessor.ForwardRawMessage
 import restapi.http.JsonSupport
@@ -15,10 +14,8 @@ import websocket.WebSocketHandler
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-class MessagesRoute(messagesRouter: ActorRef,
-                    webSocketHandler: WebSocketHandler,
-                    usersDao: UsersDao,
-                    processingTimeout: FiniteDuration)(implicit ec: ExecutionContext, ac: ApiContext)
+class MessagesRoute(processingRouter: ActorRef, webSocketHandler: WebSocketHandler, processingTimeout: FiniteDuration)
+                   (implicit ec: ExecutionContext, ac: ApiContext)
     extends Directives with SecuredAccessSupport with JsonSupport {
 
   implicit val timeout = Timeout(processingTimeout)
@@ -43,18 +40,11 @@ class MessagesRoute(messagesRouter: ActorRef,
     }
 
   private def handleMessage(message: MessageEntity, ctx: AuthTokenContext): Future[MessageProcessingResponse] = {
-    Future(usersDao.findUserByID(ctx.userId))
-      .flatMap {
-        case Some(user) =>
-          (messagesRouter ? ForwardRawMessage(message, user)).mapTo[MessageProcessingResponse]
-
-        case None =>
-          Future.successful(
-            MessageProcessingResponse(MessageProcessingCodes.Error,
-                                      s"Something went wrong! user:= ${ctx.username} not found!"))
-      }
+    (processingRouter ? ForwardRawMessage(message, ctx))
+      .mapTo[MessageProcessingResponse]
       .recover {
         case ex: Exception => MessageProcessingResponse(MessageProcessingCodes.Error, ex.getMessage)
       }
   }
+
 }

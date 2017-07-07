@@ -15,8 +15,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class HttpRouter(dbc: DatabaseContext,
                  authService: AuthenticationService,
                  webSocketHandler: WebSocketHandler,
-                 messagesRouter: ActorRef,
-                 connectedClientsStore: ActorRef,
+                 processingRouter: ActorRef,
                  configuration: Configuration)(implicit apiDispatcher: ExecutionContext)
     extends Directives with JsonSupport with CorsSupport {
 
@@ -24,7 +23,7 @@ class HttpRouter(dbc: DatabaseContext,
 
   private val userRoute = new UsersRoute(dbc.usersDao)
   private val authRoute = new AuthenticationRoute(authService)
-  private val messagesRoute = new MessagesRoute(messagesRouter, webSocketHandler, dbc.usersDao, configuration.messageTimeout)
+  private val messagesRoute = new MessagesRoute(processingRouter, webSocketHandler, configuration.messageTimeout)
 
   val routes: Route = pathPrefix("v1") {
     AccessControlCheck {
