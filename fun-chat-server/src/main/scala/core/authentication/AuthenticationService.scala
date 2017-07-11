@@ -1,12 +1,9 @@
 package core.authentication
 
-import akka.Done
 import akka.actor.ActorRef
 import core.db.users.UsersDao
 import core.entities._
 import websocket.ConnectedClientsStore._
-
-import scala.concurrent.{ExecutionContext, Future}
 
 class AuthenticationService(authenticator: UserAuthenticator, dao: UsersDao, connectedClientsStore: ActorRef) {
 
@@ -35,12 +32,11 @@ class AuthenticationService(authenticator: UserAuthenticator, dao: UsersDao, con
     authenticator.revokeToken(userId)
   }
 
-  def authorize(token: AuthToken)(implicit ec: ExecutionContext): Future[Option[AuthTokenContext]] = Future {
+  def authorize(token: AuthToken): Option[AuthTokenContext] = {
     authenticator.validateToken(token)
   }
 
-  def updateCredentials(userId: UserID, newSecret: UserSecret)(
-      implicit ec: ExecutionContext): Future[Option[AuthToken]] = Future {
+  def updateCredentials(userId: UserID, newSecret: UserSecret): Option[AuthToken] = {
 
     def updateUser(user: User, secret: UserSecret): Option[AuthToken] = {
       dao.updateUser(user.userId, secret)

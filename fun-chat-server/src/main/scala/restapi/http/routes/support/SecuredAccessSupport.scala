@@ -7,17 +7,14 @@ import akka.http.scaladsl.server.Route
 import core.entities.{AuthTokenContext, BearerToken, User}
 import restapi.http.routes.ApiContext
 
-import scala.util.Success
-
 private[http] trait SecuredAccessSupport {
 
   def securedAccess(inner: AuthTokenContext => Route)(implicit apiCtx: ApiContext): Route = {
     extractCredentials {
       case Some(OAuth2BearerToken(token)) =>
-        val ctxFuture = apiCtx.authenticate(BearerToken(token))
-        onComplete(ctxFuture) {
-          case Success(Some(ctx)) => inner(ctx)
-          case _                  => complete(StatusCodes.Unauthorized)
+        apiCtx.authenticate(BearerToken(token)) match {
+          case Some(ctx) => inner(ctx)
+          case None      => complete(StatusCodes.Unauthorized)
         }
       case _ => complete(StatusCodes.Unauthorized)
     }

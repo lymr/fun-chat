@@ -27,13 +27,13 @@ class Bootstrap {
 
     val bearerTokenGenerator = new JwtBearerTokenGenerator(SecuredTokenGenerator.generate, Timer(config.tokenExpiration))
     val userAuthenticator    = new UserAuthenticator(UserSecretUtils.validate, bearerTokenGenerator, dbc.credentialsDao)
-    val connectedClients     = actorSystem.actorOf(ConnectedClientsStore.props, "connected-clients-store")
+    val connectedClients     = actorSystem.actorOf(ConnectedClientsStore.props(), "connected-clients-store")
 
     val messageGenerator = new MessageGenerator()
     val messagesRouter   = actorSystem.actorOf(FromConfig.props(Messenger.props(dbc.usersDao)), "messagesRouter")
     val processingRouter = actorSystem.actorOf(FromConfig.props(MessageProcessor.props(messageGenerator, messagesRouter)), "processingRouter")
 
-    val apiDispatcher: ExecutionContext = actorSystem.dispatchers.lookup("blocking-api-dispatcher")
+    val apiDispatcher: ExecutionContext = actorSystem.dispatchers.lookup("akka.blocking-api-dispatcher")
     val webSocketHandler = new WebSocketHandler(connectedClients, processingRouter, config.messageTimeout)(actorSystem, materializer, apiDispatcher)
     val authService = new AuthenticationService(userAuthenticator, dbc.usersDao, connectedClients)
     val httpRouter  = new HttpRouter(dbc, authService, webSocketHandler, processingRouter, config)(apiDispatcher)

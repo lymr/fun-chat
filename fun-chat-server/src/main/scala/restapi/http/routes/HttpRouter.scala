@@ -10,7 +10,7 @@ import restapi.http.routes.support.CorsSupport
 import utils.Configuration
 import websocket.WebSocketHandler
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 class HttpRouter(dbc: DatabaseContext,
                  authService: AuthenticationService,
@@ -34,5 +34,5 @@ class HttpRouter(dbc: DatabaseContext,
   }
 }
 
-class ApiContext(val authenticate: AuthToken => Future[Option[AuthTokenContext]],
+class ApiContext(val authenticate: AuthToken => Option[AuthTokenContext],
                  val findUserByName: String => Option[User])

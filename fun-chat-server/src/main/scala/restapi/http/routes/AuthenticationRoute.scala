@@ -50,7 +50,7 @@ class AuthenticationRoute(authService: AuthenticationService)(implicit ec: Execu
         securedAccess { ctx =>
           patch {
             entity(as[String]) { password =>
-              complete(authService.updateCredentials(ctx.userId, UserSecret(password)))
+              complete(Future(authService.updateCredentials(ctx.userId, UserSecret(password))))
             }
           }
         }

@@ -15,8 +15,6 @@ import restapi.http.routes.AuthenticationRouteSpec._
 import spray.json._
 import tests.TestWordSpec
 
-import scala.concurrent.Future
-
 class AuthenticationRouteSpec extends TestWordSpec with ScalatestRouteTest with JsonSupport {
 
   @Mock
@@ -126,7 +124,7 @@ class AuthenticationRouteSpec extends TestWordSpec with ScalatestRouteTest with 
     "update credentials with valid token, request is processed" in {
       val entity = HttpEntity(ContentTypes.`application/json`, NEW_PASSWORD)
       Patch("/credentials", entity) ~> addHeader(Authorization(OAuth2BearerToken(TOKEN))) ~> authRoute.route ~> check {
-        verify(mockAuthService, times(1)).updateCredentials(eq(USER_ID), eq(NEW_SECRET))(any)
+        verify(mockAuthService, times(1)).updateCredentials(eq(USER_ID), eq(NEW_SECRET))
       }
     }
 
@@ -145,15 +143,16 @@ private object AuthenticationRouteSpec {
   val SECURED_TOKEN = SecuredToken("test-secret".toCharArray.map(_.toByte))
 
   val BEARER_TOKEN_GENERATOR = new JwtBearerTokenGenerator(() => SECURED_TOKEN, Timer(180))
-  val TOKEN: String = BEARER_TOKEN_GENERATOR.create(AuthTokenClaims(USER_ID, USERNAME, SessionID("test-session-id"))).get.token
+  val TOKEN: String =
+    BEARER_TOKEN_GENERATOR.create(AuthTokenClaims(USER_ID, USERNAME, SessionID("test-session-id"))).get.token
 
   val userByName: String => Option[User] = {
     case USERNAME => Some(User(USER_ID, USERNAME, DateTime.now))
     case _        => None
   }
 
-  val authenticate: AuthToken => Future[Option[AuthTokenContext]] = {
-    case (bearer: BearerToken) => Future.successful(BEARER_TOKEN_GENERATOR.decode(bearer).map(c => AuthTokenContext(c.userId, c.username)))
-    case _                     => Future.failed(new IllegalArgumentException("Unsupported AuthToken."))
+  val authenticate: AuthToken => Option[AuthTokenContext] = {
+    case (bearer: BearerToken) => BEARER_TOKEN_GENERATOR.decode(bearer).map(c => AuthTokenContext(c.userId, c.username))
+    case _                     => throw new IllegalArgumentException("Unsupported AuthToken.")
   }
 }

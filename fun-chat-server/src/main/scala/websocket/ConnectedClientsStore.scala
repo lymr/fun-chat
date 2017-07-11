@@ -35,7 +35,7 @@ class ConnectedClientsStore() extends Actor with ActorLogging {
 
 object ConnectedClientsStore {
 
-  def props: Props = Props(new ConnectedClientsStore)
+  def props(): Props = Props(new ConnectedClientsStore)
 
   case class ClientConnected(userId: UserID, clientEndpoint: ActorRef)
   case class ClientDisconnected(userId: UserID)

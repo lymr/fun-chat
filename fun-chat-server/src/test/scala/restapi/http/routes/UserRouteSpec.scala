@@ -15,8 +15,6 @@ import restapi.http.routes.UserRouteSpec._
 import scalikejdbc.DBSession
 import tests.TestWordSpec
 
-import scala.concurrent.Future
-
 class UserRouteSpec extends TestWordSpec with ScalatestRouteTest with JsonSupport {
 
   @Mock
@@ -96,11 +94,11 @@ private object UserRouteSpec {
   val USERS         = Seq(User(USER_ID_1, USER_1, DateTime.now), User(USER_ID_2, USER_2, DateTime.now))
   val SECURED_TOKEN = SecuredToken("test-secret".toCharArray.map(_.toByte))
 
-  val SESSION_ID_1 = SessionID("session-1")
-  val SESSION_ID_2 = SessionID("session-2")
+  val SESSION_ID_1           = SessionID("session-1")
+  val SESSION_ID_2           = SessionID("session-2")
   val BEARER_TOKEN_GENERATOR = new JwtBearerTokenGenerator(() => SECURED_TOKEN, Timer(180))
-  val TOKEN_1: String = BEARER_TOKEN_GENERATOR.create(AuthTokenClaims(USER_ID_1, USER_1, SESSION_ID_1)).get.token
-  val TOKEN_2: String = BEARER_TOKEN_GENERATOR.create(AuthTokenClaims(USER_ID_2, USER_2, SESSION_ID_2)).get.token
+  val TOKEN_1: String        = BEARER_TOKEN_GENERATOR.create(AuthTokenClaims(USER_ID_1, USER_1, SESSION_ID_1)).get.token
+  val TOKEN_2: String        = BEARER_TOKEN_GENERATOR.create(AuthTokenClaims(USER_ID_2, USER_2, SESSION_ID_2)).get.token
 
   val userByName: (String) => Option[User] = {
     case USER_1 => Some(User(USER_ID_1, USER_1, DateTime.now))
@@ -108,9 +106,8 @@ private object UserRouteSpec {
     case _      => None
   }
 
-  val authenticate: AuthToken => Future[Option[AuthTokenContext]] = {
-    case (bearer: BearerToken) =>
-      Future.successful(BEARER_TOKEN_GENERATOR.decode(bearer).map(c => AuthTokenContext(c.userId, c.username)))
-    case _ => Future.failed(new IllegalArgumentException("Unsupported AuthToken."))
+  val authenticate: AuthToken => Option[AuthTokenContext] = {
+    case (bearer: BearerToken) => BEARER_TOKEN_GENERATOR.decode(bearer).map(c => AuthTokenContext(c.userId, c.username))
+    case _                     => throw new IllegalArgumentException("Unsupported AuthToken.")
   }
 }
